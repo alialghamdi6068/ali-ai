@@ -1,7 +1,7 @@
 package net.ali.ai.command;
 
 import net.ali.ai.AliAIPlugin;
-import net.ali.ai.menu.AiMenu;
+import net.ali.ai.menu.MainMenuDialog;
 import net.ali.ai.security.OperatorGuard;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -25,7 +25,7 @@ public final class AiCommand implements CommandExecutor {
         if (!OperatorGuard.allows(plugin, sender, "command")) return true;
 
         if (args.length == 0) {
-            if (sender instanceof Player player) AiMenu.open(plugin, player);
+            if (sender instanceof Player player) MainMenuDialog.open(plugin, player);
             else sender.sendMessage("Ali AI is enabled. Use /ai help for available commands.");
             return true;
         }
@@ -34,7 +34,7 @@ public final class AiCommand implements CommandExecutor {
             case "help" -> sender.sendMessage(Component.text("/ai, /ai status, /ai quick, /ai reload", NamedTextColor.AQUA));
             case "status" -> sender.sendMessage(Component.text("Ali AI is online. Provider setup is pending.", NamedTextColor.GREEN));
             case "quick" -> {
-                if (sender instanceof Player player) AiMenu.openQuickAction(plugin, player);
+                if (sender instanceof Player player) MainMenuDialog.openQuickAction(plugin, player);
                 else sender.sendMessage(Component.text("This action can only be used in-game.", NamedTextColor.RED));
             }
             case "reload" -> {

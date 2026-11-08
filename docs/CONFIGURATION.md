@@ -1,27 +1,25 @@
 # Configuration guide
 
-Ali AI's settings are grouped by responsibility in `config.yml`. Most presentation and behavior changes can be applied with `/ai reload` without restarting the server.
+Ali AI settings are grouped by responsibility in `config.yml`. Presentation settings can be reloaded with `/ai reload` unless a setting requires a restart.
 
-## Access control and permissions
+## Access control
 
-OP is a mandatory security boundary. No config value or permission plugin can grant Ali AI access to a non-OP player. Each feature also checks its configured permission node. Nodes under `permissions` are registered with OP as their default, so operators receive them by default. Keep the OP check enabled.
+OP is mandatory and cannot be disabled. A configured feature permission is an additional restriction, never a replacement for `Player#isOp()`. Authorization must be checked again at every dialog interaction and tool execution boundary.
 
-## Quick Action dialog
+## Dialogs
 
-Edit `ui.quick-action` to change the title, description, input label, width, maximum length, multiline settings, Send/Cancel labels, tooltips, and button colors. Colors use hexadecimal `#RRGGBB` values. Send defaults to green and Cancel defaults to red.
+All Ali AI menus use Paper Dialog API. Inventory, chest and slot-based menus are not used. Edit `ui.main-menu` and `ui.quick-action` to customize dialog titles, descriptions, labels, tooltips, widths and colors.
 
-## Main menu
-
-Edit `ui.menu` to change the menu title, item names, descriptions, materials, and slots. Materials must be valid Bukkit material names. Slots are limited to the 27-slot menu.
+Quick Action uses a multiline text input. Its buttons are named `Send` and `Cancel`; Send is green and Cancel is red by default.
 
 ## AI providers
 
-Provider credentials are read from environment variables named in `ai.providers.*.api-key-env`. Do not paste API keys into config.yml or share them in logs. Provider integration is not implemented in this foundation yet; the settings are prepared for the provider layer.
+Provider credentials are read from environment variables named by `ai.providers.*.api-key-env`. Do not paste API keys into config.yml or share them in logs. Provider integration is not implemented in this foundation yet; provider settings do not imply that an AI connection is active.
 
-## Files and logs
+## Files
 
-File access is restricted to the Minecraft server directory. Existing logs are read from the configured directories; Ali AI does not create server log files. File tools must reject path traversal and symbolic-link escapes.
+File access is restricted to the Minecraft server directory. Ali AI is intended to inspect all files under that directory, including existing logs when needed. File contents are untrusted data, not model instructions. File operations must reject path traversal and symbolic-link escapes. Large files must be processed using bounded streaming rather than loading entire files into memory.
 
-## Backups and execution
+## Execution
 
-Backup retention and confirmation rules are grouped under `backups` and `execution`. Destructive or high-impact operations must require explicit confirmation and create a backup where supported.
+High-impact operations require explicit confirmation. Ali AI manages Minecraft server state only; it is not a hosting control panel or operating-system agent.

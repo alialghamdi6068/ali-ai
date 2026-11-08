@@ -1,7 +1,6 @@
 package net.ali.ai;
 
 import net.ali.ai.command.AiCommand;
-import net.ali.ai.menu.AiMenuListener;
 import net.ali.ai.menu.QuickActionListener;
 import net.ali.ai.service.AiRequestService;
 import net.ali.ai.service.UnconfiguredAiRequestService;
@@ -32,7 +31,6 @@ public final class AliAIPlugin extends JavaPlugin {
         }
 
         command.setExecutor(new AiCommand(this));
-        getServer().getPluginManager().registerEvents(new AiMenuListener(this), this);
         getServer().getPluginManager().registerEvents(new QuickActionListener(this), this);
         getLogger().info("Ali AI enabled. Configuration loaded; AI provider is not configured yet.");
     }

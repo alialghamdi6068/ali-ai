@@ -19,7 +19,7 @@ permissions:
     description: Allows OP players to inspect server status
     default: op
   aliai.logs:
-    description: Allows OP players to read server logs
+    description: Allows OP players to read existing server logs
     default: op
   aliai.files:
     description: Allows OP players to manage server files
@@ -32,10 +32,4 @@ permissions:
     default: op
   aliai.players:
     description: Allows OP players to manage players
-    default: op
-  aliai.backups:
-    description: Allows OP players to manage backups
-    default: op
-  aliai.builds:
-    description: Allows OP players to build and test plugin projects
     default: op
