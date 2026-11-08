@@ -1,0 +1,6 @@
+# Ali AI configuration
+# AI provider credentials are intentionally not included in this initial foundation.
+security:
+  require-op: true
+quick-action:
+  max-request-length: 1000

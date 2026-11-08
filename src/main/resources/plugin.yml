@@ -8,7 +8,6 @@ commands:
   ai:
     description: Open Ali AI server administration
     usage: /ai [subcommand]
-    permission: aliaI.operator
 permissions:
   aliaI.operator:
     description: Allows access to all Ali AI commands and actions
