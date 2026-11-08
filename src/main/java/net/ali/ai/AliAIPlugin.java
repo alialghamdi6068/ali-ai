@@ -5,8 +5,14 @@ import net.ali.ai.menu.AiMenuListener;
 import net.ali.ai.menu.QuickActionListener;
 import net.ali.ai.service.AiRequestService;
 import net.ali.ai.service.UnconfiguredAiRequestService;
+import org.bukkit.Bukkit;
 import org.bukkit.command.PluginCommand;
+import org.bukkit.permissions.Permission;
+import org.bukkit.permissions.PermissionDefault;
 import org.bukkit.plugin.java.JavaPlugin;
+
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 public final class AliAIPlugin extends JavaPlugin {
     private AiRequestService requestService;
@@ -15,7 +21,8 @@ public final class AliAIPlugin extends JavaPlugin {
     public void onEnable() {
         saveDefaultConfig();
         reloadConfig();
-        this.requestService = new UnconfiguredAiRequestService();
+        registerConfiguredPermissions();
+        requestService = new UnconfiguredAiRequestService(this);
 
         PluginCommand command = getCommand("ai");
         if (command == null) {
@@ -32,6 +39,26 @@ public final class AliAIPlugin extends JavaPlugin {
 
     public void reloadSettings() {
         reloadConfig();
+        registerConfiguredPermissions();
+    }
+
+    private void registerConfiguredPermissions() {
+        var section = getConfig().getConfigurationSection("permissions");
+        if (section == null) return;
+
+        Set<String> nodes = new LinkedHashSet<>();
+        for (String feature : section.getKeys(false)) {
+            String node = getConfig().getString("permissions." + feature, "").trim();
+            if (!node.isEmpty()) nodes.add(node);
+        }
+        for (String node : nodes) {
+            if (Bukkit.getPluginManager().getPermission(node) != null) continue;
+            try {
+                Bukkit.getPluginManager().addPermission(new Permission(node, PermissionDefault.OP));
+            } catch (IllegalArgumentException exception) {
+                getLogger().warning("Invalid permission node in config.yml: " + node);
+            }
+        }
     }
 
     public AiRequestService requestService() {

@@ -22,28 +22,20 @@ public final class AiCommand implements CommandExecutor {
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command,
                              @NotNull String label, @NotNull String[] args) {
-        if (!OperatorGuard.allows(sender)) return true;
+        if (!OperatorGuard.allows(plugin, sender, "command")) return true;
 
         if (args.length == 0) {
-            if (sender instanceof Player player) {
-                AiMenu.open(plugin, player);
-            } else {
-                sender.sendMessage("Ali AI is enabled. Use /ai help for available commands.");
-            }
+            if (sender instanceof Player player) AiMenu.open(plugin, player);
+            else sender.sendMessage("Ali AI is enabled. Use /ai help for available commands.");
             return true;
         }
 
         switch (args[0].toLowerCase(java.util.Locale.ROOT)) {
-            case "help" -> sender.sendMessage(Component.text(
-                    "/ai, /ai status, /ai quick, /ai reload", NamedTextColor.AQUA));
-            case "status" -> sender.sendMessage(Component.text(
-                    "Ali AI is online. Provider setup is pending.", NamedTextColor.GREEN));
+            case "help" -> sender.sendMessage(Component.text("/ai, /ai status, /ai quick, /ai reload", NamedTextColor.AQUA));
+            case "status" -> sender.sendMessage(Component.text("Ali AI is online. Provider setup is pending.", NamedTextColor.GREEN));
             case "quick" -> {
-                if (sender instanceof Player player) {
-                    AiMenu.openQuickAction(plugin, player);
-                } else {
-                    sender.sendMessage(Component.text("This action can only be used in-game.", NamedTextColor.RED));
-                }
+                if (sender instanceof Player player) AiMenu.openQuickAction(plugin, player);
+                else sender.sendMessage(Component.text("This action can only be used in-game.", NamedTextColor.RED));
             }
             case "reload" -> {
                 plugin.reloadSettings();

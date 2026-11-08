@@ -9,6 +9,33 @@ commands:
     description: Open Ali AI server administration
     usage: /ai [subcommand]
 permissions:
-  aliaI.operator:
+  aliai.operator:
     description: Allows access to all Ali AI commands and actions
+    default: op
+  aliai.quick-action:
+    description: Allows OP players to use Quick Action
+    default: op
+  aliai.status:
+    description: Allows OP players to inspect server status
+    default: op
+  aliai.logs:
+    description: Allows OP players to read server logs
+    default: op
+  aliai.files:
+    description: Allows OP players to manage server files
+    default: op
+  aliai.plugins:
+    description: Allows OP players to manage plugins
+    default: op
+  aliai.worlds:
+    description: Allows OP players to manage worlds
+    default: op
+  aliai.players:
+    description: Allows OP players to manage players
+    default: op
+  aliai.backups:
+    description: Allows OP players to manage backups
+    default: op
+  aliai.builds:
+    description: Allows OP players to build and test plugin projects
     default: op

@@ -14,28 +14,24 @@ import org.bukkit.inventory.meta.ItemMeta;
 import java.util.List;
 
 public final class AiMenu {
-    public static final int QUICK_ACTION_SLOT = 13;
-
     private AiMenu() { }
 
     public static void open(AliAIPlugin plugin, Player player) {
-        if (!OperatorGuard.allows(player)) return;
-
+        if (!OperatorGuard.allows(plugin, player, "command")) return;
         var config = plugin.getConfig();
         AiMenuHolder holder = new AiMenuHolder();
         Inventory inventory = Bukkit.createInventory(holder, 27,
                 Component.text(config.getString("ui.menu.title", "Ali AI | Server Administrator")));
         holder.attach(inventory);
-
-        inventory.setItem(config.getInt("ui.menu.quick-action.slot", 13), item(
+        inventory.setItem(slot(config.getInt("ui.menu.quick-action.slot", 13)), item(
                 material(config.getString("ui.menu.quick-action.material", "WRITABLE_BOOK"), Material.WRITABLE_BOOK),
                 config.getString("ui.menu.quick-action.name", "Quick Action"),
                 config.getString("ui.menu.quick-action.description", "Write a request in your own words."), NamedTextColor.AQUA));
-        inventory.setItem(config.getInt("ui.menu.status.slot", 11), item(
+        inventory.setItem(slot(config.getInt("ui.menu.status.slot", 11)), item(
                 material(config.getString("ui.menu.status.material", "COMPASS"), Material.COMPASS),
                 config.getString("ui.menu.status.name", "Server Status"),
                 config.getString("ui.menu.status.description", "Inspect the current server state."), NamedTextColor.GREEN));
-        inventory.setItem(config.getInt("ui.menu.logs.slot", 15), item(
+        inventory.setItem(slot(config.getInt("ui.menu.logs.slot", 15)), item(
                 material(config.getString("ui.menu.logs.material", "BOOK"), Material.BOOK),
                 config.getString("ui.menu.logs.name", "Server Logs"),
                 config.getString("ui.menu.logs.description", "Read and analyze existing log files."), NamedTextColor.YELLOW));
@@ -43,9 +39,11 @@ public final class AiMenu {
     }
 
     public static void openQuickAction(AliAIPlugin plugin, Player player) {
-        if (!OperatorGuard.allows(player)) return;
+        if (!OperatorGuard.allows(plugin, player, "quick-action")) return;
         QuickActionDialog.open(plugin, player);
     }
+
+    private static int slot(int value) { return Math.max(0, Math.min(26, value)); }
 
     private static ItemStack item(Material material, String name, String description, NamedTextColor color) {
         ItemStack stack = new ItemStack(material);
