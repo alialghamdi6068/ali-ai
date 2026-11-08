@@ -17,7 +17,9 @@ public final class AiMenu {
 
     public static void open(AliAIPlugin plugin, Player player) {
         if (!OperatorGuard.allows(player)) return;
-        Inventory inventory = Bukkit.createInventory(new AiMenuHolder(), 27, Component.text("Ali AI", NamedTextColor.DARK_AQUA));
+        AiMenuHolder holder = new AiMenuHolder();
+        Inventory inventory = Bukkit.createInventory(holder, 27, Component.text("Ali AI", NamedTextColor.DARK_AQUA));
+        holder.attach(inventory);
         inventory.setItem(QUICK_ACTION_SLOT, item(Material.WRITABLE_BOOK, "Quick Action", NamedTextColor.AQUA, "Write a request in natural language."));
         inventory.setItem(11, item(Material.COMPASS, "Server Status", NamedTextColor.GREEN, "Inspect current server status."));
         inventory.setItem(15, item(Material.BOOK, "Logs", NamedTextColor.YELLOW, "Read existing server log files."));

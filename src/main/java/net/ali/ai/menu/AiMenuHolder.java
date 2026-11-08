@@ -4,5 +4,7 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 
 public final class AiMenuHolder implements InventoryHolder {
-    @Override public Inventory getInventory() { return null; }
+    private Inventory inventory;
+    void attach(Inventory inventory) { this.inventory = inventory; }
+    @Override public Inventory getInventory() { return inventory; }
 }
