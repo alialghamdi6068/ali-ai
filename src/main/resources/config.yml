@@ -1,6 +1,141 @@
-# Ali AI configuration
-# AI provider credentials are intentionally not included in this initial foundation.
+# -----------------------------------------------------------------------------
+# Ali AI | Main configuration
+# Changes to this file are applied with /ai reload unless a setting says otherwise.
+# Keep API keys in environment variables or a secrets manager, never in this file.
+# -----------------------------------------------------------------------------
+
+# Access control. OP is always required; this cannot be disabled in config.
 security:
   require-op: true
-quick-action:
-  max-request-length: 1000
+  permission-node: "aliai.operator"
+  denied-message: "You don't have permission to use Ali AI."
+
+# Permission nodes are registered with OP as their default.
+# A player must still be OP even if an external permissions plugin grants a node.
+permissions:
+  command: "aliai.operator"
+  quick-action: "aliai.quick-action"
+  view-status: "aliai.status"
+  read-logs: "aliai.logs"
+  manage-files: "aliai.files"
+  manage-plugins: "aliai.plugins"
+  manage-worlds: "aliai.worlds"
+  manage-players: "aliai.players"
+  manage-backups: "aliai.backups"
+  manage-builds: "aliai.builds"
+
+# In-game control menu.
+ui:
+  menu:
+    title: "Ali AI | Server Administrator"
+    quick-action:
+      name: "Quick Action"
+      description: "Write a request in your own words."
+      material: "WRITABLE_BOOK"
+      slot: 13
+    status:
+      name: "Server Status"
+      description: "Inspect the current server state."
+      material: "COMPASS"
+      slot: 11
+    logs:
+      name: "Server Logs"
+      description: "Read and analyze existing log files."
+      material: "BOOK"
+      slot: 15
+
+  # Native Paper Dialog. Button colors accept #RRGGBB values.
+  quick-action:
+    title: "Ali AI — Quick Action"
+    description: "Describe what you want Ali AI to do. Arabic and English are supported."
+    input:
+      key: "request"
+      label: "Your request"
+      width: 300
+      max-length: 1000
+      multiline:
+        enabled: true
+        max-lines: 6
+        height: 120
+    send:
+      label: "Send"
+      tooltip: "Send this request to Ali AI"
+      color: "#20C060"
+    cancel:
+      label: "Cancel"
+      tooltip: "Close without sending"
+      color: "#E04444"
+    allow-escape: true
+
+# AI provider configuration. Credentials should be supplied through environment variables.
+ai:
+  provider: "none"
+  request-timeout-seconds: 45
+  max-retries: 2
+  retry-delay-millis: 1000
+  providers:
+    gemini:
+      enabled: false
+      api-key-env: "ALI_AI_GEMINI_API_KEY"
+      model: ""
+      base-url: ""
+    groq:
+      enabled: false
+      api-key-env: "ALI_AI_GROQ_API_KEY"
+      model: ""
+      base-url: ""
+    openrouter:
+      enabled: false
+      api-key-env: "ALI_AI_OPENROUTER_API_KEY"
+      model: ""
+      base-url: ""
+
+# File access is restricted to the Minecraft server directory.
+files:
+  enabled: true
+  index-on-startup: false
+  index-directory: "plugins/AliAI/index"
+  max-file-size-mb: 128
+  stream-buffer-kb: 64
+  create-backup-before-edit: true
+  reject-symbolic-link-escapes: true
+
+# Ali AI reads existing server logs. It does not create server log files.
+logs:
+  enabled: true
+  directories:
+    - "logs"
+    - "plugins"
+  scan-subdirectories: true
+  max-file-size-mb: 256
+  tail-lines: 200
+
+backups:
+  enabled: true
+  directory: "plugins/AliAI/backups"
+  before-sensitive-changes: true
+  scheduled:
+    enabled: false
+    interval-minutes: 30
+    keep: 10
+
+execution:
+  require-confirmation-for:
+    - "file.delete"
+    - "file.overwrite"
+    - "plugin.install"
+    - "plugin.update"
+    - "plugin.delete"
+    - "world.delete"
+    - "server.restart"
+  task-timeout-seconds: 300
+  max-concurrent-tasks: 2
+
+messages:
+  prefix: "<dark_aqua>[Ali AI]</dark_aqua> "
+  request-received: "<green>Your request has been received.</green>"
+  provider-not-configured: "<yellow>Ali AI has no AI provider configured yet. Set one up in config.yml.</yellow>"
+  empty-request: "<red>Please enter a request before pressing Send.</red>"
+  request-too-long: "<red>Your request is too long. Maximum: %maximum% characters.</red>"
+  dialog-unavailable: "<red>The request could not be read. Please try again.</red>"
+  config-reloaded: "<green>Ali AI configuration reloaded.</green>"

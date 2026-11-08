@@ -11,18 +11,34 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
+import java.util.List;
+
 public final class AiMenu {
     public static final int QUICK_ACTION_SLOT = 13;
+
     private AiMenu() { }
 
     public static void open(AliAIPlugin plugin, Player player) {
         if (!OperatorGuard.allows(player)) return;
+
+        var config = plugin.getConfig();
         AiMenuHolder holder = new AiMenuHolder();
-        Inventory inventory = Bukkit.createInventory(holder, 27, Component.text("Ali AI", NamedTextColor.DARK_AQUA));
+        Inventory inventory = Bukkit.createInventory(holder, 27,
+                Component.text(config.getString("ui.menu.title", "Ali AI | Server Administrator")));
         holder.attach(inventory);
-        inventory.setItem(QUICK_ACTION_SLOT, item(Material.WRITABLE_BOOK, "Quick Action", NamedTextColor.AQUA, "Write a request in natural language."));
-        inventory.setItem(11, item(Material.COMPASS, "Server Status", NamedTextColor.GREEN, "Inspect current server status."));
-        inventory.setItem(15, item(Material.BOOK, "Logs", NamedTextColor.YELLOW, "Read existing server log files."));
+
+        inventory.setItem(config.getInt("ui.menu.quick-action.slot", 13), item(
+                material(config.getString("ui.menu.quick-action.material", "WRITABLE_BOOK"), Material.WRITABLE_BOOK),
+                config.getString("ui.menu.quick-action.name", "Quick Action"),
+                config.getString("ui.menu.quick-action.description", "Write a request in your own words."), NamedTextColor.AQUA));
+        inventory.setItem(config.getInt("ui.menu.status.slot", 11), item(
+                material(config.getString("ui.menu.status.material", "COMPASS"), Material.COMPASS),
+                config.getString("ui.menu.status.name", "Server Status"),
+                config.getString("ui.menu.status.description", "Inspect the current server state."), NamedTextColor.GREEN));
+        inventory.setItem(config.getInt("ui.menu.logs.slot", 15), item(
+                material(config.getString("ui.menu.logs.material", "BOOK"), Material.BOOK),
+                config.getString("ui.menu.logs.name", "Server Logs"),
+                config.getString("ui.menu.logs.description", "Read and analyze existing log files."), NamedTextColor.YELLOW));
         player.openInventory(inventory);
     }
 
@@ -31,12 +47,17 @@ public final class AiMenu {
         QuickActionDialog.open(plugin, player);
     }
 
-    private static ItemStack item(Material material, String name, NamedTextColor color, String lore) {
+    private static ItemStack item(Material material, String name, String description, NamedTextColor color) {
         ItemStack stack = new ItemStack(material);
         ItemMeta meta = stack.getItemMeta();
         meta.displayName(Component.text(name, color));
-        meta.lore(java.util.List.of(Component.text(lore, NamedTextColor.GRAY)));
+        meta.lore(List.of(Component.text(description, NamedTextColor.GRAY)));
         stack.setItemMeta(meta);
         return stack;
+    }
+
+    private static Material material(String name, Material fallback) {
+        Material material = Material.matchMaterial(name);
+        return material == null ? fallback : material;
     }
 }

@@ -14,18 +14,27 @@ public final class AliAIPlugin extends JavaPlugin {
     @Override
     public void onEnable() {
         saveDefaultConfig();
+        reloadConfig();
         this.requestService = new UnconfiguredAiRequestService();
+
         PluginCommand command = getCommand("ai");
         if (command == null) {
             getLogger().severe("The /ai command is missing from plugin.yml; disabling Ali AI.");
             getServer().getPluginManager().disablePlugin(this);
             return;
         }
+
         command.setExecutor(new AiCommand(this));
         getServer().getPluginManager().registerEvents(new AiMenuListener(this), this);
         getServer().getPluginManager().registerEvents(new QuickActionListener(this), this);
-        getLogger().info("Ali AI enabled. AI provider is not configured yet.");
+        getLogger().info("Ali AI enabled. Configuration loaded; AI provider is not configured yet.");
     }
 
-    public AiRequestService requestService() { return requestService; }
+    public void reloadSettings() {
+        reloadConfig();
+    }
+
+    public AiRequestService requestService() {
+        return requestService;
+    }
 }
