@@ -1,0 +1,15 @@
+name: AliAI
+version: '0.1.0-SNAPSHOT'
+main: net.ali.ai.AliAIPlugin
+api-version: '26.2'
+author: Ali
+description: Server Administrator powered by AI
+commands:
+  ai:
+    description: Open Ali AI server administration
+    usage: /ai [subcommand]
+    permission: aliaI.operator
+permissions:
+  aliaI.operator:
+    description: Allows access to all Ali AI commands and actions
+    default: op
