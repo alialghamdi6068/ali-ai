@@ -1,6 +1,7 @@
 package net.ali.ai;
 
 import net.ali.ai.command.AiCommand;
+import net.ali.ai.config.SecretsConfig;
 import net.ali.ai.menu.QuickActionListener;
 import net.ali.ai.service.AiRequestService;
 import net.ali.ai.service.UnconfiguredAiRequestService;
@@ -15,11 +16,14 @@ import java.util.Set;
 
 public final class AliAIPlugin extends JavaPlugin {
     private AiRequestService requestService;
+    private SecretsConfig secrets;
 
     @Override
     public void onEnable() {
         saveDefaultConfig();
         reloadConfig();
+        secrets = new SecretsConfig(this);
+        secrets.load();
         registerConfiguredPermissions();
         requestService = new UnconfiguredAiRequestService(this);
 
@@ -32,11 +36,16 @@ public final class AliAIPlugin extends JavaPlugin {
 
         command.setExecutor(new AiCommand(this));
         getServer().getPluginManager().registerEvents(new QuickActionListener(this), this);
-        getLogger().info("Ali AI enabled. Configuration loaded; AI provider is not configured yet.");
+        if (!secrets.hasAnyKey()) {
+            getLogger().info("Ali AI enabled without API keys. Add provider keys to plugins/AliAI/secrets.yml to configure AI.");
+        } else {
+            getLogger().info("Ali AI enabled. Provider credentials were found; connection health has not been checked.");
+        }
     }
 
     public void reloadSettings() {
         reloadConfig();
+        secrets.load();
         registerConfiguredPermissions();
     }
 
@@ -61,5 +70,9 @@ public final class AliAIPlugin extends JavaPlugin {
 
     public AiRequestService requestService() {
         return requestService;
+    }
+
+    public SecretsConfig secrets() {
+        return secrets;
     }
 }

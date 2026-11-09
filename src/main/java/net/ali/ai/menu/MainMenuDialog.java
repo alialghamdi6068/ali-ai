@@ -32,13 +32,10 @@ public final class MainMenuDialog {
                 "ui.main-menu.description",
                 "Your Minecraft server administration assistant."
         );
-        String provider = config.getString("ai.provider", "none");
-        boolean providerEnabled = !"none".equalsIgnoreCase(provider)
-                && plugin.getConfig().getBoolean("ai.providers." + provider + ".enabled", false);
 
-        Component status = providerEnabled
-                ? Component.text("Provider selected: " + provider + ". Connection health is not verified yet.", TextColor.color(0xE5B94C))
-                : Component.text("No AI provider is enabled.", TextColor.color(0xE5B94C));
+        Component status = plugin.secrets().hasAnyKey()
+                ? Component.text("API credentials found. Connection health is not verified.", TextColor.color(0xE5B94C))
+                : Component.text("No API key configured.", TextColor.color(0xE5B94C));
 
         ActionButton quickAction = ActionButton.create(
                 Component.text(

@@ -49,21 +49,18 @@ ui:
       color: "#E04444"
 
 ai:
-  provider: "none"
+  default-provider: "none"
   request-timeout-seconds: 45
   max-retries: 2
   providers:
     gemini:
       enabled: false
-      api-key-env: "ALI_AI_GEMINI_API_KEY"
+      model: ""
+    openai:
+      enabled: false
       model: ""
     groq:
       enabled: false
-      api-key-env: "ALI_AI_GROQ_API_KEY"
-      model: ""
-    openrouter:
-      enabled: false
-      api-key-env: "ALI_AI_OPENROUTER_API_KEY"
       model: ""
 
 files:
@@ -71,7 +68,7 @@ files:
   recursive-scan: true
   include-hidden-files: true
   index-on-startup: false
-  index-directory: "plugins/AliAI/index"
+  index-directory: "plugins/AliAI/data/index"
   max-file-size-mb: 128
   stream-buffer-kb: 64
   reject-symbolic-link-escapes: true
@@ -91,7 +88,8 @@ execution:
 
 messages:
   prefix: "<dark_aqua>[Ali AI]</dark_aqua> "
-  provider-not-configured: "<yellow>Ali AI has no AI provider configured yet. Set one up in config.yml.</yellow>"
+  no-api-key: "<yellow>No API key is configured. Add a key to plugins/AliAI/secrets.yml.</yellow>"
+  provider-unavailable: "<yellow>API credentials were found, but AI provider requests are not available yet.</yellow>"
   empty-request: "<red>Please enter a request before pressing Send.</red>"
   request-too-long: "<red>Your request is too long. Maximum: %maximum% characters.</red>"
   dialog-unavailable: "<red>The request could not be read. Please try again.</red>"
