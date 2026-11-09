@@ -8,12 +8,13 @@
 - Direct asynchronous REST chat requests for Gemini, OpenAI and Groq.
 - Configurable models, provider enablement, preferred provider, key rotation and provider fallback.
 - Clear no-key and no-enabled-provider responses.
+- Explicit `/ai search <query>` using Groq Browser Search on supported GPT-OSS models.
 - No separate plugin logs or visible cache directory.
 
 ## Still to implement
 
 - Reliable conversation history and per-operator context.
-- Internet search tool with source citations and safe result handling.
+- Broader internet search support across providers and structured source-link extraction; current live search is Groq-only.
 - Tool calling with a strict server-side allowlist and permission checks per tool.
 - Server intelligence and diagnostics.
 - File indexing and secure file operations.

@@ -31,8 +31,24 @@ public final class AiCommand implements CommandExecutor {
         }
 
         switch (args[0].toLowerCase(java.util.Locale.ROOT)) {
-            case "help" -> sender.sendMessage(Component.text("/ai, /ai status, /ai quick, /ai reload", NamedTextColor.AQUA));
+            case "help" -> sender.sendMessage(Component.text("/ai, /ai status, /ai quick, /ai search <query>, /ai reload", NamedTextColor.AQUA));
             case "status" -> sender.sendMessage(Component.text("Ali AI is online. Provider setup is pending.", NamedTextColor.GREEN));
+            case "search" -> {
+                if (!(sender instanceof Player player)) {
+                    sender.sendMessage(Component.text("Web search can only be used in-game.", NamedTextColor.RED));
+                    break;
+                }
+                if (args.length < 2) {
+                    sender.sendMessage(Component.text("Usage: /ai search <query>", NamedTextColor.YELLOW));
+                    break;
+                }
+                String query = String.join(" ", java.util.Arrays.copyOfRange(args, 1, args.length));
+                if (plugin.requestService() instanceof net.ali.ai.service.HttpAiRequestService service) {
+                    service.search(player, query);
+                } else {
+                    sender.sendMessage(Component.text("Web search is not available.", NamedTextColor.RED));
+                }
+            }
             case "quick" -> {
                 if (sender instanceof Player player) MainMenuDialog.openQuickAction(plugin, player);
                 else sender.sendMessage(Component.text("This action can only be used in-game.", NamedTextColor.RED));

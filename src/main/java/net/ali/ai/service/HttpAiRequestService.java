@@ -16,7 +16,6 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
@@ -54,6 +53,14 @@ public final class HttpAiRequestService implements AiRequestService {
 
     @Override
     public void submit(Player operator, String request) {
+        submitRequest(operator, request, false);
+    }
+
+    public void search(Player operator, String query) {
+        submitRequest(operator, query, true);
+    }
+
+    private void submitRequest(Player operator, String request, boolean webSearch) {
         if (!OperatorGuard.allows(plugin, operator, "quick-action")) {
             return;
         }
@@ -63,10 +70,13 @@ public final class HttpAiRequestService implements AiRequestService {
             return;
         }
 
-        List<Attempt> attempts = buildAttempts();
+        List<Attempt> attempts = buildAttempts(webSearch);
         if (attempts.isEmpty()) {
-            send(operator, "messages.no-enabled-provider",
-                    "<yellow>API keys exist, but no provider is enabled with a model in config.yml.</yellow>");
+            String path = webSearch ? "messages.web-search-unavailable" : "messages.no-enabled-provider";
+            String fallback = webSearch
+                    ? "<yellow>Web search requires Groq enabled with a supported GPT-OSS model and a Groq API key.</yellow>"
+                    : "<yellow>API keys exist, but no provider is enabled with a model in config.yml.</yellow>";
+            send(operator, path, fallback);
             return;
         }
 
@@ -74,7 +84,7 @@ public final class HttpAiRequestService implements AiRequestService {
                 plugin.getConfig().getString("messages.request-started",
                         "<gray>Ali AI is processing your request...</gray>")));
 
-        tryProviders(operator, request, attempts, 0)
+        tryProviders(operator, request, attempts, 0, webSearch)
                 .whenComplete((answer, error) -> runOnMainThread(() -> {
                     if (!operator.isOnline() || !plugin.isEnabled()) {
                         return;
@@ -93,8 +103,9 @@ public final class HttpAiRequestService implements AiRequestService {
                 }));
     }
 
-    private List<Attempt> buildAttempts() {
-        List<String> providerNames = new ArrayList<>(List.of("gemini", "openai", "groq"));
+    private List<Attempt> buildAttempts(boolean webSearch) {
+        List<String> providerNames = webSearch ? new ArrayList<>(List.of("groq"))
+                : new ArrayList<>(List.of("gemini", "openai", "groq"));
         String preferred = plugin.getConfig().getString("ai.default-provider", "none")
                 .toLowerCase(Locale.ROOT);
         if (providerNames.remove(preferred)) {
@@ -107,7 +118,7 @@ public final class HttpAiRequestService implements AiRequestService {
                 continue;
             }
             String model = plugin.getConfig().getString("ai.providers." + name + ".model", "").trim();
-            if (model.isEmpty()) {
+            if (model.isEmpty() || (webSearch && !isGroqSearchModel(model))) {
                 continue;
             }
 
@@ -124,7 +135,7 @@ public final class HttpAiRequestService implements AiRequestService {
         return attempts;
     }
 
-    private CompletableFuture<String> tryProviders(Player operator, String prompt, List<Attempt> attempts, int index) {
+    private CompletableFuture<String> tryProviders(Player operator, String prompt, List<Attempt> attempts, int index, boolean webSearch) {
         if (index >= attempts.size()) {
             return CompletableFuture.failedFuture(new IllegalStateException("No provider accepted the request."));
         }
@@ -132,9 +143,9 @@ public final class HttpAiRequestService implements AiRequestService {
         Attempt attempt = attempts.get(index);
         HttpRequest request;
         try {
-            request = createRequest(attempt, prompt);
+            request = createRequest(attempt, prompt, webSearch);
         } catch (RuntimeException exception) {
-            return tryProviders(operator, prompt, attempts, index + 1);
+            return tryProviders(operator, prompt, attempts, index + 1, webSearch);
         }
 
         return httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
@@ -148,12 +159,15 @@ public final class HttpAiRequestService implements AiRequestService {
                     if (error == null && answer != null && !answer.isBlank()) {
                         return CompletableFuture.completedFuture(answer);
                     }
-                    return tryProviders(operator, prompt, attempts, index + 1);
+                    if (error != null) {
+                        plugin.getLogger().warning("AI provider attempt failed: " + describeFailure(error));
+                    }
+                    return tryProviders(operator, prompt, attempts, index + 1, webSearch);
                 })
                 .thenCompose(future -> future);
     }
 
-    private HttpRequest createRequest(Attempt attempt, String prompt) {
+    private HttpRequest createRequest(Attempt attempt, String prompt, boolean webSearch) {
         JsonObject body = new JsonObject();
         body.addProperty("model", attempt.model());
         JsonArray messages = new JsonArray();
@@ -168,6 +182,14 @@ public final class HttpAiRequestService implements AiRequestService {
         user.addProperty("content", prompt);
         messages.add(user);
         body.add("messages", messages);
+        if (webSearch) {
+            JsonArray tools = new JsonArray();
+            JsonObject browserSearch = new JsonObject();
+            browserSearch.addProperty("type", "browser_search");
+            tools.add(browserSearch);
+            body.add("tools", tools);
+            body.addProperty("tool_choice", "required");
+        }
 
         int timeoutSeconds = Math.max(5, Math.min(120,
                 plugin.getConfig().getInt("ai.request-timeout-seconds", 45)));
@@ -207,6 +229,20 @@ public final class HttpAiRequestService implements AiRequestService {
             return text.toString();
         }
         throw new IllegalStateException("Provider returned an unsupported content format.");
+    }
+
+    private boolean isGroqSearchModel(String model) {
+        return model.equals("openai/gpt-oss-20b")
+                || model.equals("openai/gpt-oss-120b")
+                || model.equals("openai/gpt-oss-safeguard-20b");
+    }
+
+    private String describeFailure(Throwable error) {
+        Throwable cause = error;
+        while (cause instanceof CompletionException && cause.getCause() != null) {
+            cause = cause.getCause();
+        }
+        return cause instanceof ProviderException ? cause.getMessage() : cause.getClass().getSimpleName();
     }
 
     private String endpoint(String provider) {

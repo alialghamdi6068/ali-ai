@@ -50,3 +50,9 @@ Ali AI remains enabled when no API keys are configured. AI requests then return 
 API requests run asynchronously and do not block the Minecraft tick thread. Results are delivered on the server thread, and OP is checked again before delivery. API keys are sent only in HTTPS Authorization headers and are never included in request logs.
 
 All Ali AI commands and dialog actions require OP. Configured permission nodes are additional restrictions, not alternatives to OP.
+
+## Internet search
+
+Use `/ai search <query>` for a live web search. This implementation uses Groq's built-in `browser_search` tool. It requires Groq enabled, a Groq API key, and one of these supported model IDs: `openai/gpt-oss-20b`, `openai/gpt-oss-120b`, or `openai/gpt-oss-safeguard-20b`. Other providers are not silently presented as having searched the web. If this configuration is missing, Ali AI explains what is required.
+
+Groq's former Compound models are not used because they were decommissioned in September 2026. See [Groq Browser Search documentation](https://console.groq.com/docs/tool-use/built-in-tools/browser-search).
