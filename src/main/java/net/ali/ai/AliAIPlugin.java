@@ -4,7 +4,7 @@ import net.ali.ai.command.AiCommand;
 import net.ali.ai.config.SecretsConfig;
 import net.ali.ai.menu.QuickActionListener;
 import net.ali.ai.service.AiRequestService;
-import net.ali.ai.service.UnconfiguredAiRequestService;
+import net.ali.ai.service.HttpAiRequestService;
 import org.bukkit.Bukkit;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.permissions.Permission;
@@ -25,7 +25,7 @@ public final class AliAIPlugin extends JavaPlugin {
         secrets = new SecretsConfig(this);
         secrets.load();
         registerConfiguredPermissions();
-        requestService = new UnconfiguredAiRequestService(this);
+        requestService = new HttpAiRequestService(this);
 
         PluginCommand command = getCommand("ai");
         if (command == null) {

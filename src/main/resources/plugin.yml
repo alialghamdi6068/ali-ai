@@ -4,6 +4,8 @@ main: net.ali.ai.AliAIPlugin
 api-version: '26.2'
 author: Ali
 description: Server Administrator powered by AI
+libraries:
+  - com.google.code.gson:gson:2.13.2
 commands:
   ai:
     description: Open Ali AI server administration
@@ -28,7 +30,7 @@ permissions:
     description: Allows OP players to manage plugins
     default: op
   aliai.worlds:
-    description: Allows OP players to manage worlds
+    description: Allows OP players to manage server worlds
     default: op
   aliai.players:
     description: Allows OP players to manage players
