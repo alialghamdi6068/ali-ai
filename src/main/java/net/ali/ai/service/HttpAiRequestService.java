@@ -104,6 +104,9 @@ public final class HttpAiRequestService implements AiRequestService {
     }
 
     private List<Attempt> buildAttempts(boolean webSearch) {
+        if (webSearch && !plugin.getConfig().getBoolean("ai.web-search.enabled", true)) {
+            return List.of();
+        }
         List<String> providerNames = webSearch ? new ArrayList<>(List.of("groq"))
                 : new ArrayList<>(List.of("gemini", "openai", "groq"));
         String preferred = plugin.getConfig().getString("ai.default-provider", "none")
