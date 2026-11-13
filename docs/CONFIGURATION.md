@@ -37,17 +37,31 @@ ai:
     groq:
       enabled: false
       model: "YOUR_SUPPORTED_GROQ_MODEL"
+  tools:
+    enabled: true
+    max-calls-per-round: 4
 ```
 
-The plugin calls the providers' HTTPS REST endpoints directly using Java HttpClient. It does not use provider SDKs or run local models. Gemini uses Google's documented OpenAI-compatible Chat Completions endpoint; OpenAI and Groq use their Chat Completions endpoints. Provider/model feature support can differ.
+The plugin calls provider HTTPS REST endpoints directly using Java HttpClient. It does not use provider SDKs or run local models. Gemini uses Google's OpenAI-compatible Chat Completions endpoint; OpenAI and Groq use their Chat Completions endpoints. Tool calling is an OpenAI-compatible capability, but provider/model support can differ. If a provider rejects a tool-enabled request, Ali AI falls back to the next configured provider/key.
 
 The configured default provider is tried first. Other enabled providers are used as fallbacks. Keys are rotated between attempts. An HTTP error, network failure, malformed response or empty response advances to the next configured key/provider. A successful key is not proof of long-term provider health.
 
 Ali AI remains enabled when no API keys are configured. AI requests then return a clear no-key message. Credentials are server-wide in this version; per-operator credential profiles are not implemented.
 
+## Available AI tools
+
+When `ai.tools.enabled` is true, the model may request these read-only operations:
+- Read server status and performance metrics.
+- List online players, loaded worlds and installed plugins.
+- List server files, read small text files, search filenames and search text in a bounded number of small files.
+
+Each tool execution re-checks OP and its configured feature permission. File tools remain confined to the server directory. File and log contents are returned as untrusted data and must never be treated as instructions. The current implementation does not allow the model to execute arbitrary console commands or make destructive changes.
+
+`max-calls-per-round` limits how many function calls can be accepted from one provider response (1–8; default 4). File-content search is bounded and is not a full-text index.
+
 ## Security and threading
 
-API requests run asynchronously and do not block the Minecraft tick thread. Results are delivered on the server thread, and OP is checked again before delivery. API keys are sent only in HTTPS Authorization headers and are never included in request logs.
+API requests run asynchronously and do not block the Minecraft tick thread. Bukkit-backed tools are dispatched to the server thread. OP is checked again when a tool is executed and before the final response is delivered. API keys are sent only in HTTPS Authorization headers and are never included in request logs.
 
 All Ali AI commands and dialog actions require OP. Configured permission nodes are additional restrictions, not alternatives to OP.
 

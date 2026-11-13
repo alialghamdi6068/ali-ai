@@ -8,17 +8,20 @@ Ali AI is a Java Paper server-administration plugin for Minecraft servers.
 - Gradle
 
 ## Current functionality
-- Paper Dialog main menu and Quick Action.
-- OP-only command access.
-- Gemini, OpenAI and Groq REST chat providers.
+- Native Paper Dialog main menu and Quick Action.
+- Mandatory OP authorization at command and dialog entry points.
+- Gemini, OpenAI and Groq REST chat providers with key rotation and fallback.
 - Groq built-in web search on supported GPT-OSS models.
-- Live server, player, world and plugin information.
-- Bounded read-only server file inspection.
+- AI function calling through a guarded server-side tool allowlist.
+- Live server status, TPS/MSPT, JVM memory, online players, worlds and plugin inventory.
+- Bounded server file listing, text preview, filename search and content search across a capped number of small text files.
 
 ## Security contract
-- Every Ali AI command and action requires an operator (`Player#isOp`).
+- Every Ali AI command, dialog action and AI tool execution requires an operator (`Player#isOp`).
 - Feature permission nodes are additional restrictions, never alternatives to OP.
 - File inspection is confined to the Minecraft server directory and rejects symbolic links.
+- AI tools are allowlisted read-only operations; model-generated arbitrary commands are never executed.
+- File and log contents are treated as untrusted data.
 - No arbitrary host shell or hosting-panel access is provided.
 - Existing server logs can be inspected as ordinary files; Ali AI does not create replacement logs.
 

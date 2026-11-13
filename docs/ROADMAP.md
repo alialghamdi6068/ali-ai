@@ -2,21 +2,23 @@
 
 ## Implemented foundation
 - Native Paper Dialog main menu and Quick Action dialog.
-- Mandatory OP authorization at command and dialog entry points.
+- Mandatory OP authorization at command, dialog and AI tool execution boundaries.
 - Server-local provider credential file with bounded key slots.
 - Direct asynchronous REST chat requests for Gemini, OpenAI and Groq.
 - Configurable models, provider enablement, preferred provider, key rotation and provider fallback.
 - Explicit `/ai search <query>` using Groq Browser Search on supported GPT-OSS models.
-- Live server status, online player details, loaded world summaries and installed plugin inventory.
-- Bounded read-only file listing, text preview and filename search, confined to the server root with symbolic-link rejection.
+- Guarded read-only AI tools for live server status, performance, online players, loaded worlds and installed plugins.
+- Guarded file tools for directory listing, bounded text preview, filename search and bounded text-content search.
+- File inspection is confined to the server root, rejects symbolic links and caps read/scan sizes.
 - In-memory task executor foundation; no task history is persisted.
 - Basic OP/plugin-count security snapshot with its limitations stated.
+- Regression tests for file path confinement, preview size limits, text search and symbolic-link rejection.
 
 ## Still to implement
 - Reliable conversation history and per-operator context.
-- Provider-specific tool calling and a strict server-side tool allowlist.
-- Natural-language execution of administrative tools with per-tool authorization and confirmations.
-- File creation, modification, deletion, moving, copying, archive handling and content indexing.
+- Multi-round agent planning and tool execution with bounded steps.
+- Natural-language execution of administrative changes with per-tool authorization and confirmation flows.
+- File creation, modification, deletion, moving, copying, archive handling and durable content indexing.
 - Player actions (kick/ban/whitelist/permissions/inventory) with confirmation flows.
 - World actions (load/unload/create/delete/time/weather/gamerules) with confirmation flows.
 - Plugin installation/update/removal with trusted-source and compatibility verification.
@@ -24,6 +26,6 @@
 - Deep security checks for plugin permissions, configuration risks and suspicious files.
 - Complete configurable Dialog navigation for all ten administration sections.
 - Provider-specific capability discovery, usage reporting and structured source-link extraction.
-- Automated unit, Paper integration and mocked-provider tests.
+- Paper integration tests and mocked-provider contract tests.
 
-A successful provider text response is not an administrative action. The remaining action systems must be backed by trusted Java tools and authorization checks; the model must never execute arbitrary server commands or host shell commands.
+A successful provider text response is not an administrative action. Administrative changes must be backed by trusted Java tools, explicit authorization and confirmation where required; the model must never execute arbitrary server commands or host shell commands.
