@@ -51,9 +51,30 @@ public final class ServerIntelligenceService {
         );
     }
 
+    public String performance() {
+        requirePrimaryThread();
+        double[] tps = Bukkit.getTPS();
+        Runtime runtime = Runtime.getRuntime();
+        long used = runtime.totalMemory() - runtime.freeMemory();
+        return """
+                Performance snapshot
+                TPS: 1m %s | 5m %s | 15m %s
+                Average tick time (MSPT): %.2f ms
+                JVM heap: %s used / %s committed / %s max
+                """.formatted(
+                tps.length > 0 ? String.format(Locale.ROOT, "%.2f", tps[0]) : "unavailable",
+                tps.length > 1 ? String.format(Locale.ROOT, "%.2f", tps[1]) : "unavailable",
+                tps.length > 2 ? String.format(Locale.ROOT, "%.2f", tps[2]) : "unavailable",
+                Bukkit.getAverageTickTime(),
+                formatBytes(used),
+                formatBytes(runtime.totalMemory()),
+                formatBytes(runtime.maxMemory())
+        );
+    }
+
     public String onlinePlayers() {
         requirePrimaryThread();
-        List<Player> players = Bukkit.getOnlinePlayers().stream()
+        List<? extends Player> players = Bukkit.getOnlinePlayers().stream()
                 .sorted(Comparator.comparing(Player::getName, String.CASE_INSENSITIVE_ORDER))
                 .toList();
         if (players.isEmpty()) return "No players are currently online.";

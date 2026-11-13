@@ -55,7 +55,10 @@ public final class AiCommand implements CommandExecutor {
             case "players" -> sendLines(sender, plugin.serverIntelligence().onlinePlayers());
             case "worlds" -> sendLines(sender, plugin.serverIntelligence().worlds());
             case "plugins" -> sendLines(sender, plugin.serverIntelligence().plugins());
-            case "performance" -> sendLines(sender, plugin.serverIntelligence().serverStatus());
+            case "performance" -> sendLines(sender, plugin.serverIntelligence().performance());
+            case "tasks" -> sender.sendMessage(Component.text(
+                    "Currently tracked background tasks: " + plugin.taskManager().activeCount(),
+                    NamedTextColor.GRAY));
             case "security" -> sendSecuritySummary(sender);
             case "files" -> handleFiles(sender, args);
             case "search" -> {
