@@ -266,8 +266,6 @@ public final class HttpAiRequestService implements AiRequestService {
         JsonObject body = new JsonObject();
         body.addProperty("model", attempt.model());
         body.add("messages", messages);
-        body.add("tools", toolExecutor.definitions());
-        body.addProperty("tool_choice", "none");
 
         int timeout = Math.max(5, Math.min(120, plugin.getConfig().getInt("ai.request-timeout-seconds", 45)));
         HttpRequest request = HttpRequest.newBuilder(URI.create(attempt.endpoint()))

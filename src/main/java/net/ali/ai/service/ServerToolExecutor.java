@@ -117,7 +117,11 @@ public final class ServerToolExecutor {
     }
 
     private String optionalString(JsonObject arguments, String key, String fallback) {
-        if (!arguments.has(key) || !arguments.get(key).isJsonPrimitive()) return fallback;
+        if (!arguments.has(key)) return fallback;
+        if (!arguments.get(key).isJsonPrimitive()
+                || !arguments.getAsJsonPrimitive(key).isString()) {
+            throw new IllegalArgumentException("Argument must be a string: " + key);
+        }
         String value = arguments.get(key).getAsString();
         if (value.length() > 512) throw new IllegalArgumentException("Argument is too long: " + key);
         return value;
