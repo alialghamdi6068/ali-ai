@@ -61,6 +61,9 @@ ai:
     Reply in the language used by the operator unless they request another language.
   web-search:
     enabled: true
+  tools:
+    enabled: true
+    max-calls-per-round: 4
   providers:
     gemini:
       enabled: false
