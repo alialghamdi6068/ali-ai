@@ -42,9 +42,11 @@ public final class HttpAiRequestService implements AiRequestService {
     private final AtomicInteger geminiKeyIndex = new AtomicInteger();
     private final AtomicInteger openAiKeyIndex = new AtomicInteger();
     private final AtomicInteger groqKeyIndex = new AtomicInteger();
+    private final ServerToolExecutor toolExecutor;
 
     public HttpAiRequestService(AliAIPlugin plugin) {
         this.plugin = plugin;
+        this.toolExecutor = new ServerToolExecutor(plugin);
         this.httpClient = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(15))
                 .followRedirects(HttpClient.Redirect.NEVER)
@@ -152,11 +154,11 @@ public final class HttpAiRequestService implements AiRequestService {
         }
 
         return httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
-                .thenApply(response -> {
+                .thenCompose(response -> {
                     if (response.statusCode() < 200 || response.statusCode() >= 300) {
-                        throw new CompletionException(new ProviderException(attempt.provider(), response.statusCode()));
+                        return CompletableFuture.failedFuture(new ProviderException(attempt.provider(), response.statusCode()));
                     }
-                    return extractAnswer(response.body());
+                    return handleToolCalls(operator, response.body(), webSearch);
                 })
                 .handle((answer, error) -> {
                     if (error == null && answer != null && !answer.isBlank()) {
@@ -192,6 +194,9 @@ public final class HttpAiRequestService implements AiRequestService {
             tools.add(browserSearch);
             body.add("tools", tools);
             body.addProperty("tool_choice", "required");
+        } else if (plugin.getConfig().getBoolean("ai.tools.enabled", true)) {
+            body.add("tools", toolExecutor.definitions());
+            body.addProperty("tool_choice", "auto");
         }
 
         int timeoutSeconds = Math.max(5, Math.min(120,
@@ -204,6 +209,41 @@ public final class HttpAiRequestService implements AiRequestService {
                 .header("Accept", "application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(body.toString()))
                 .build();
+    }
+
+    private CompletableFuture<String> handleToolCalls(Player operator, String responseBody, boolean webSearch) {
+        if (webSearch) return CompletableFuture.completedFuture(extractAnswer(responseBody));
+        JsonObject root = JsonParser.parseString(responseBody).getAsJsonObject();
+        JsonArray choices = root.getAsJsonArray("choices");
+        if (choices == null || choices.isEmpty()) throw new IllegalStateException("Provider returned no choices.");
+        JsonObject message = choices.get(0).getAsJsonObject().getAsJsonObject("message");
+        if (message == null || !message.has("tool_calls") || !message.get("tool_calls").isJsonArray()) {
+            return CompletableFuture.completedFuture(extractAnswer(responseBody));
+        }
+
+        JsonArray calls = message.getAsJsonArray("tool_calls");
+        int maximum = Math.max(1, Math.min(8, plugin.getConfig().getInt("ai.tools.max-calls-per-round", 4)));
+        if (calls.size() > maximum) return CompletableFuture.failedFuture(new IllegalStateException("AI tool-call limit reached."));
+
+        List<CompletableFuture<String>> results = new ArrayList<>();
+        for (JsonElement element : calls) {
+            JsonObject call = element.getAsJsonObject();
+            JsonObject function = call.getAsJsonObject("function");
+            String name = function.get("name").getAsString();
+            JsonElement parsed = JsonParser.parseString(function.get("arguments").getAsString());
+            if (!parsed.isJsonObject()) throw new IllegalArgumentException("Invalid tool arguments.");
+            results.add(toolExecutor.execute(operator, name, parsed.getAsJsonObject()));
+        }
+        return CompletableFuture.allOf(results.toArray(CompletableFuture[]::new))
+                .thenApply(ignored -> {
+                    StringBuilder output = new StringBuilder("Ali AI server tool results:");
+                    for (int i = 0; i < calls.size(); i++) {
+                        JsonObject call = calls.get(i).getAsJsonObject();
+                        String name = call.getAsJsonObject("function").get("name").getAsString();
+                        output.append("\n\n").append(name).append(":\n").append(results.get(i).join());
+                    }
+                    return output.toString();
+                });
     }
 
     private String extractAnswer(String responseBody) {
