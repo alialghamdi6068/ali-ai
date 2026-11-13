@@ -2,7 +2,6 @@ package net.ali.ai.service;
 
 import net.ali.ai.AliAIPlugin;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -35,6 +34,10 @@ public final class FileIntelligenceService {
             throw new IOException("Unable to resolve the Minecraft server directory.");
         }
         this.serverRoot = root.toRealPath();
+    }
+
+    FileIntelligenceService(Path serverRoot) throws IOException {
+        this.serverRoot = serverRoot.toRealPath();
     }
 
     public String list(String relativePath) throws IOException {
