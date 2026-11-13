@@ -1,20 +1,28 @@
 # Ali AI
 
-Ali AI is a Paper server-administration plugin for Minecraft servers.
+Ali AI is a Java Paper server-administration plugin for Minecraft servers.
 
 ## Target platform
 - Paper 26.2
 - Java 25
 - Gradle
 
+## Current functionality
+- Paper Dialog main menu and Quick Action.
+- OP-only command access.
+- Gemini, OpenAI and Groq REST chat providers.
+- Groq built-in web search on supported GPT-OSS models.
+- Live server, player, world and plugin information.
+- Bounded read-only server file inspection.
+
 ## Security contract
-- Every `/ai` command and every Ali AI action requires an operator (`Player#isOp`).
-- Permission checks are enforced at command entry points and again at action execution boundaries.
-- Quick Action is available only to operators. Its dialog uses a green **Send** action and a red **Cancel** action.
-- Server files are confined to the configured Minecraft server directory. Logs are read from existing files; Ali AI does not create server log files.
+- Every Ali AI command and action requires an operator (`Player#isOp`).
+- Feature permission nodes are additional restrictions, never alternatives to OP.
+- File inspection is confined to the Minecraft server directory and rejects symbolic links.
+- No arbitrary host shell or hosting-panel access is provided.
+- Existing server logs can be inspected as ordinary files; Ali AI does not create replacement logs.
 
-## Scope
-Ali AI manages the Minecraft server only. It is not a hosting control panel or operating-system agent.
+## Build
+Run `gradle clean test build` with Java 25.
 
-## Status
-Initial repository bootstrap. Features are implemented incrementally with verification evidence; see the source tree and project documentation.
+See [docs/ROADMAP.md](docs/ROADMAP.md), [docs/CONFIGURATION.md](docs/CONFIGURATION.md), and [docs/SECURITY.md](docs/SECURITY.md) for implementation status and boundaries.

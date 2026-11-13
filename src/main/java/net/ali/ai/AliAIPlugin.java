@@ -4,19 +4,26 @@ import net.ali.ai.command.AiCommand;
 import net.ali.ai.config.SecretsConfig;
 import net.ali.ai.menu.QuickActionListener;
 import net.ali.ai.service.AiRequestService;
+import net.ali.ai.service.FileIntelligenceService;
 import net.ali.ai.service.HttpAiRequestService;
+import net.ali.ai.service.ServerIntelligenceService;
+import net.ali.ai.service.TaskManager;
 import org.bukkit.Bukkit;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.permissions.Permission;
 import org.bukkit.permissions.PermissionDefault;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.io.IOException;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
 public final class AliAIPlugin extends JavaPlugin {
     private AiRequestService requestService;
     private SecretsConfig secrets;
+    private ServerIntelligenceService serverIntelligence;
+    private FileIntelligenceService fileIntelligence;
+    private TaskManager taskManager;
 
     @Override
     public void onEnable() {
@@ -26,6 +33,15 @@ public final class AliAIPlugin extends JavaPlugin {
         secrets.load();
         registerConfiguredPermissions();
         requestService = new HttpAiRequestService(this);
+        serverIntelligence = new ServerIntelligenceService(this);
+        taskManager = new TaskManager(this);
+        try {
+            fileIntelligence = new FileIntelligenceService(this);
+        } catch (IOException exception) {
+            getLogger().severe("Unable to initialize secure server file access: " + exception.getMessage());
+            getServer().getPluginManager().disablePlugin(this);
+            return;
+        }
 
         PluginCommand command = getCommand("ai");
         if (command == null) {
@@ -41,6 +57,11 @@ public final class AliAIPlugin extends JavaPlugin {
         } else {
             getLogger().info("Ali AI enabled. Provider credentials were found; connection health has not been checked.");
         }
+    }
+
+    @Override
+    public void onDisable() {
+        if (taskManager != null) taskManager.shutdown();
     }
 
     public void reloadSettings() {
@@ -68,11 +89,9 @@ public final class AliAIPlugin extends JavaPlugin {
         }
     }
 
-    public AiRequestService requestService() {
-        return requestService;
-    }
-
-    public SecretsConfig secrets() {
-        return secrets;
-    }
+    public AiRequestService requestService() { return requestService; }
+    public SecretsConfig secrets() { return secrets; }
+    public ServerIntelligenceService serverIntelligence() { return serverIntelligence; }
+    public FileIntelligenceService fileIntelligence() { return fileIntelligence; }
+    public TaskManager taskManager() { return taskManager; }
 }
