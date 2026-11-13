@@ -47,6 +47,7 @@ public final class AiCommand implements CommandExecutor {
                     /ai files list [path]
                     /ai files read <path>
                     /ai files search <name>
+                    /ai files grep <text>
                     /ai search <query>
                     /ai quick
                     /ai reload
@@ -94,9 +95,10 @@ public final class AiCommand implements CommandExecutor {
     private void handleFiles(CommandSender sender, String[] args) {
         if (!OperatorGuard.allows(plugin, sender, "manage-files")) return;
         if (args.length < 2) {
-            sender.sendMessage(Component.text("Usage: /ai files <list|read|search> [path or name]", NamedTextColor.YELLOW));
+            sender.sendMessage(Component.text("Usage: /ai files <list|read|search|grep> [path or text]", NamedTextColor.YELLOW));
             return;
         }
+
         String operation = args[1].toLowerCase(Locale.ROOT);
         String target = args.length > 2 ? String.join(" ", Arrays.copyOfRange(args, 2, args.length)) : ".";
         try {
@@ -110,7 +112,11 @@ public final class AiCommand implements CommandExecutor {
                     if (args.length < 3) throw new IOException("Usage: /ai files search <file-name>");
                     yield plugin.fileIntelligence().search(target);
                 }
-                default -> throw new IOException("Unknown file operation. Use list, read or search.");
+                case "grep" -> {
+                    if (args.length < 3) throw new IOException("Usage: /ai files grep <text>");
+                    yield plugin.fileIntelligence().searchContent(target);
+                }
+                default -> throw new IOException("Unknown file operation. Use list, read, search or grep.");
             };
             sendLines(sender, result);
         } catch (IOException | SecurityException exception) {
