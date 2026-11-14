@@ -52,17 +52,18 @@ public final class AiCommand implements CommandExecutor {
                     /ai quick
                     /ai reload
                     """);
-            case "status" -> sendLines(sender, plugin.serverIntelligence().serverStatus());
-            case "players" -> sendLines(sender, plugin.serverIntelligence().onlinePlayers());
-            case "worlds" -> sendLines(sender, plugin.serverIntelligence().worlds());
-            case "plugins" -> sendLines(sender, plugin.serverIntelligence().plugins());
-            case "performance" -> sendLines(sender, plugin.serverIntelligence().performance());
-            case "tasks" -> sender.sendMessage(Component.text(
+            case "status" -> { if (OperatorGuard.allows(plugin, sender, "view-status")) sendLines(sender, plugin.serverIntelligence().serverStatus()); }
+            case "players" -> { if (OperatorGuard.allows(plugin, sender, "view-status")) sendLines(sender, plugin.serverIntelligence().onlinePlayers()); }
+            case "worlds" -> { if (OperatorGuard.allows(plugin, sender, "view-status")) sendLines(sender, plugin.serverIntelligence().worlds()); }
+            case "plugins" -> { if (OperatorGuard.allows(plugin, sender, "view-status")) sendLines(sender, plugin.serverIntelligence().plugins()); }
+            case "performance" -> { if (OperatorGuard.allows(plugin, sender, "view-status")) sendLines(sender, plugin.serverIntelligence().performance()); }
+            case "tasks" -> { if (OperatorGuard.allows(plugin, sender, "view-status")) sender.sendMessage(Component.text(
                     "Currently tracked background tasks: " + plugin.taskManager().activeCount(),
-                    NamedTextColor.GRAY));
-            case "security" -> sendSecuritySummary(sender);
+                    NamedTextColor.GRAY)); }
+            case "security" -> { if (OperatorGuard.allows(plugin, sender, "view-status")) sendSecuritySummary(sender); }
             case "files" -> handleFiles(sender, args);
             case "search" -> {
+                if (!OperatorGuard.allows(plugin, sender, "quick-action")) break;
                 if (!(sender instanceof Player player)) {
                     sender.sendMessage(Component.text("Web search can only be used in-game.", NamedTextColor.RED));
                     break;
