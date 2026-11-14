@@ -15,7 +15,7 @@ Ali AI is a Java Paper server-administration plugin for Minecraft servers.
 - AI function calling through a guarded server-side tool allowlist.
 - Live server status, TPS/MSPT, JVM memory, online players, worlds and plugin inventory.
 - Online player inspection and confirmation-gated kicks for non-OP players.
-- Loaded-world inspection and confirmation-gated world-time changes.
+- Loaded-world inspection and confirmation-gated world-time and weather changes.
 - Bounded server file listing, text preview, filename search and content search across a capped number of small text files.
 
 ## Security contract
