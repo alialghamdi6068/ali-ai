@@ -69,7 +69,7 @@ All Ali AI commands and dialog actions require OP. Configured permission nodes a
 
 Player kicks and world-time changes require an explicit Paper Dialog confirmation. The dialog text and button labels/tooltips can be customized under `ui.player-confirmation` and `ui.world-confirmation` in `config.yml`. Closing a dialog without choosing an action expires the pending request after two minutes. Each pending request is bound to the initiating operator and re-checks OP and its feature permission when confirmed.
 
-World time uses Minecraft ticks from 0 through 23999: 0 is sunrise, 6000 noon, 12000 sunset and 18000 midnight. Weather accepts `clear`, `rain` or `thunder`; rain and thunder are initially set for approximately 10 minutes. Time and weather changes affect only a currently loaded world.
+World time uses Minecraft ticks from 0 through 23999: 0 is sunrise, 6000 noon, 12000 sunset and 18000 midnight. Weather accepts `clear`, `rain` or `thunder`; rain and thunder are initially set for approximately 10 minutes. Time and weather changes affect only a currently loaded world. Weather accepts `clear`, `rain` or `thunder`; rain and thunder are initially set for approximately 10 minutes.
 
 ## Internet search
 
