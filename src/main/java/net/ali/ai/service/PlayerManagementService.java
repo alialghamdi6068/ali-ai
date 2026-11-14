@@ -45,8 +45,7 @@ public final class PlayerManagementService {
                 Health: %.1f / %.1f
                 Food: %d / 20
                 Level: %d
-                """.formatted(
-                target.getName(), target.getUniqueId(), target.isOp(), target.getPing(),
+                """.formatted(target.getName(), target.getUniqueId(), target.isOp(), target.getPing(),
                 target.getWorld().getName(), target.getX(), target.getY(), target.getZ(),
                 target.getGameMode(), target.getHealth(), target.getMaxHealth(),
                 target.getFoodLevel(), target.getLevel());
@@ -56,30 +55,30 @@ public final class PlayerManagementService {
         requirePrimaryThread();
         if (!operator.isOnline() || !OperatorGuard.allows(plugin, operator, "command")
                 || !OperatorGuard.allows(plugin, operator, "manage-players")) {
-            return CompletableFuture.completedFuture("{\"ok\":false,\"error\":\"Operator authorization failed.\"}");
+            return CompletableFuture.completedFuture(error("Operator authorization failed."));
         }
 
         Player target = findOnlinePlayer(targetName);
-        if (target == null) {
-            return CompletableFuture.completedFuture("{\"ok\":false,\"error\":\"No online player matched that exact name.\"}");
-        }
+        if (target == null) return CompletableFuture.completedFuture(error("No online player matched that exact name."));
         if (target.getUniqueId().equals(operator.getUniqueId())) {
-            return CompletableFuture.completedFuture("{\"ok\":false,\"error\":\"You cannot kick yourself through Ali AI.\"}");
+            return CompletableFuture.completedFuture(error("You cannot kick yourself through Ali AI."));
         }
         if (target.isOp()) {
-            return CompletableFuture.completedFuture("{\"ok\":false,\"error\":\"Ali AI will not kick an OP player.\"}");
+            return CompletableFuture.completedFuture(error("Ali AI will not kick an OP player."));
         }
 
-        String safeReason = reason == null || reason.isBlank() ? "Removed by a server administrator." : reason.strip();
+        String safeReason = reason == null || reason.isBlank()
+                ? "Removed by a server administrator." : reason.strip().replaceAll("\\s+", " ");
         if (safeReason.length() > 160) {
-            return CompletableFuture.completedFuture("{\"ok\":false,\"error\":\"Kick reason must be 160 characters or fewer.\"}");
+            return CompletableFuture.completedFuture(error("Kick reason must be 160 characters or fewer."));
         }
 
         long operatorPending = pendingKicks.values().stream()
                 .filter(pending -> pending.operatorId().equals(operator.getUniqueId()))
                 .count();
         if (pendingKicks.size() >= 20 || operatorPending >= 3) {
-            return CompletableFuture.completedFuture("{\\"ok\\":false,\\"error\\":\\"Too many pending player confirmations. Resolve an existing dialog first.\\"}");
+            return CompletableFuture.completedFuture(error(
+                    "Too many pending player confirmations. Resolve an existing dialog first."));
         }
 
         UUID id = UUID.randomUUID();
@@ -94,8 +93,8 @@ public final class PlayerManagementService {
 
     public void handleClick(Player operator, Key identifier) {
         requirePrimaryThread();
-        String prefix = "aliai:player_action/";
         String raw = identifier.asString();
+        String prefix = "aliai:player_action/";
         if (!raw.startsWith(prefix)) return;
 
         String[] parts = raw.substring(prefix.length()).split("/", 2);
@@ -111,35 +110,39 @@ public final class PlayerManagementService {
         if (pending == null || !pending.operatorId().equals(operator.getUniqueId())) return;
         if (!OperatorGuard.allows(plugin, operator, "command")
                 || !OperatorGuard.allows(plugin, operator, "manage-players")) {
-            complete(id, pending, "{\"ok\":false,\"error\":\"Operator authorization failed before confirmation.\"}");
+            complete(id, pending, error("Operator authorization failed before confirmation."));
             return;
         }
 
         if (parts[0].equals("cancel")) {
-            complete(id, pending, "{\"ok\":false,\"cancelled\":true,\"message\":\"Kick cancelled by operator.\"}");
+            complete(id, pending, cancelled("Kick cancelled by operator."));
             return;
         }
         if (!parts[0].equals("confirm")) return;
 
         Player target = Bukkit.getPlayer(pending.targetId());
         if (target == null || !target.isOnline()) {
-            complete(id, pending, "{\"ok\":false,\"error\":\"Target player is no longer online; no action was taken.\"}");
+            complete(id, pending, error("Target player is no longer online; no action was taken."));
             return;
         }
         if (target.isOp() || target.getUniqueId().equals(operator.getUniqueId())) {
-            complete(id, pending, "{\"ok\":false,\"error\":\"Target safety check failed; no action was taken.\"}");
+            complete(id, pending, error("Target safety check failed; no action was taken."));
             return;
         }
 
         target.kick(Component.text(pending.reason()));
-        complete(id, pending, "{\"ok\":true,\"action\":\"kick\",\"player\":\"" + escapeJson(pending.targetName())
-                + "\",\"message\":\"Player was kicked after operator confirmation.\"}");
+        com.google.gson.JsonObject response = new com.google.gson.JsonObject();
+        response.addProperty("ok", true);
+        response.addProperty("action", "kick");
+        response.addProperty("player", pending.targetName());
+        response.addProperty("message", "Player was kicked after operator confirmation.");
+        complete(id, pending, response.toString());
     }
 
     public void shutdown() {
         for (Map.Entry<UUID, PendingKick> entry : pendingKicks.entrySet()) {
             complete(entry.getKey(), entry.getValue(),
-                    "{\"ok\":false,\"error\":\"Ali AI stopped before the action was confirmed.\"}");
+                    error("Ali AI stopped before the action was confirmed."));
         }
     }
 
@@ -161,10 +164,8 @@ public final class PlayerManagementService {
                 120, DialogAction.customClick(Key.key("aliai:player_action/cancel/" + id), null));
 
         Dialog dialog = Dialog.create(builder -> builder.empty()
-                .base(DialogBase.builder(Component.text(title))
-                        .canCloseWithEscape(true)
-                        .body(List.of(
-                                DialogBody.plainMessage(Component.text(description)),
+                .base(DialogBase.builder(Component.text(title)).canCloseWithEscape(true)
+                        .body(List.of(DialogBody.plainMessage(Component.text(description)),
                                 DialogBody.plainMessage(Component.text(reason))))
                         .build())
                 .type(DialogType.confirmation(confirm, cancel)));
@@ -173,9 +174,7 @@ public final class PlayerManagementService {
 
     private void expire(UUID id) {
         PendingKick pending = pendingKicks.get(id);
-        if (pending != null) {
-            complete(id, pending, "{\"ok\":false,\"cancelled\":true,\"message\":\"Confirmation expired; no action was taken.\"}");
-        }
+        if (pending != null) complete(id, pending, cancelled("Confirmation expired; no action was taken."));
     }
 
     private void complete(UUID id, PendingKick pending, String message) {
@@ -189,8 +188,19 @@ public final class PlayerManagementService {
                 .findFirst().orElse(null);
     }
 
-    private String escapeJson(String value) {
-        return value.replace("\\", "\\\\").replace("\"", "\\\"");
+    private String error(String message) {
+        com.google.gson.JsonObject response = new com.google.gson.JsonObject();
+        response.addProperty("ok", false);
+        response.addProperty("error", message);
+        return response.toString();
+    }
+
+    private String cancelled(String message) {
+        com.google.gson.JsonObject response = new com.google.gson.JsonObject();
+        response.addProperty("ok", false);
+        response.addProperty("cancelled", true);
+        response.addProperty("message", message);
+        return response.toString();
     }
 
     private void requirePrimaryThread() {
@@ -200,5 +210,5 @@ public final class PlayerManagementService {
     }
 
     private record PendingKick(UUID operatorId, UUID targetId, String targetName,
-                              String reason, CompletableFuture<String> result) { }
+                               String reason, CompletableFuture<String> result) { }
 }
