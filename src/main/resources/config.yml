@@ -36,6 +36,16 @@ ui:
     cancel:
       label: "Cancel"
       tooltip: "Do not kick this player"
+  world-confirmation:
+    title: "Confirm world change"
+    description: "Set the time in %world% to %time% ticks?"
+    hint: "0 = sunrise, 6000 = noon, 12000 = sunset, 18000 = midnight."
+    confirm:
+      label: "Confirm"
+      tooltip: "Apply this world time"
+    cancel:
+      label: "Cancel"
+      tooltip: "Do not change the world time"
   quick-action:
     title: "Ali AI — Quick Action"
     description: "Describe what you want Ali AI to do. Arabic and English are supported."

@@ -9,6 +9,7 @@ import net.ali.ai.service.HttpAiRequestService;
 import net.ali.ai.service.PlayerManagementService;
 import net.ali.ai.service.ServerIntelligenceService;
 import net.ali.ai.service.TaskManager;
+import net.ali.ai.service.WorldManagementService;
 import org.bukkit.Bukkit;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.permissions.Permission;
@@ -26,6 +27,7 @@ public final class AliAIPlugin extends JavaPlugin {
     private FileIntelligenceService fileIntelligence;
     private TaskManager taskManager;
     private PlayerManagementService playerManagement;
+    private WorldManagementService worldManagement;
 
     @Override
     public void onEnable() {
@@ -37,6 +39,7 @@ public final class AliAIPlugin extends JavaPlugin {
         requestService = new HttpAiRequestService(this);
         serverIntelligence = new ServerIntelligenceService(this);
         playerManagement = new PlayerManagementService(this);
+        worldManagement = new WorldManagementService(this);
         taskManager = new TaskManager(this);
         try {
             fileIntelligence = new FileIntelligenceService(this);
@@ -65,6 +68,7 @@ public final class AliAIPlugin extends JavaPlugin {
     @Override
     public void onDisable() {
         if (playerManagement != null) playerManagement.shutdown();
+        if (worldManagement != null) worldManagement.shutdown();
         if (taskManager != null) taskManager.shutdown();
     }
 
@@ -99,4 +103,5 @@ public final class AliAIPlugin extends JavaPlugin {
     public FileIntelligenceService fileIntelligence() { return fileIntelligence; }
     public TaskManager taskManager() { return taskManager; }
     public PlayerManagementService playerManagement() { return playerManagement; }
+    public WorldManagementService worldManagement() { return worldManagement; }
 }

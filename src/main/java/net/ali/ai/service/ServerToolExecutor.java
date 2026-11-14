@@ -24,6 +24,8 @@ public final class ServerToolExecutor {
         tools.add(tool("get_performance", "Read current TPS, MSPT and JVM heap metrics."));
         tools.add(tool("list_online_players", "List online players with UUID, ping, world, game mode and OP status."));
         tools.add(tool("list_worlds", "List loaded worlds and their current environment, difficulty, time and weather."));
+        tools.add(tool("get_world_details", "Inspect one loaded world by exact world name.", "world", true));
+        tools.add(setWorldTimeTool());
         tools.add(tool("list_plugins", "List installed plugins and their enabled state."));
         tools.add(tool("get_player_details", "Inspect an online player by exact Minecraft username.", "player", true));
         tools.add(kickPlayerTool());
@@ -51,7 +53,9 @@ public final class ServerToolExecutor {
                 boolean fileTool = name.equals("list_server_files") || name.equals("read_server_file")
                         || name.equals("search_server_files") || name.equals("search_file_contents");
                 boolean playerTool = name.equals("get_player_details") || name.equals("kick_player");
-                String feature = fileTool ? "manage-files" : playerTool ? "manage-players" : "view-status";
+                boolean worldTool = name.equals("get_world_details") || name.equals("set_world_time");
+                String feature = fileTool ? "manage-files" : playerTool ? "manage-players"
+                        : worldTool ? "manage-worlds" : "view-status";
                 if (!OperatorGuard.allows(plugin, operator, feature)) {
                     result.complete(error("The operator is not authorized for this tool."));
                     return;
@@ -67,12 +71,22 @@ public final class ServerToolExecutor {
                             });
                     return;
                 }
+                if (name.equals("set_world_time")) {
+                    plugin.worldManagement().requestTimeChange(operator,
+                                    requiredString(arguments, "world"), requiredLong(arguments, "time"))
+                            .whenComplete((message, failure) -> {
+                                if (failure != null) result.complete(error("World time change failed."));
+                                else result.complete(message);
+                            });
+                    return;
+                }
 
                 String output = switch (name) {
                     case "get_server_status" -> plugin.serverIntelligence().serverStatus();
                     case "get_performance" -> plugin.serverIntelligence().performance();
                     case "list_online_players" -> plugin.serverIntelligence().onlinePlayers();
                     case "list_worlds" -> plugin.serverIntelligence().worlds();
+                    case "get_world_details" -> plugin.worldManagement().inspectWorld(requiredString(arguments, "world"));
                     case "list_plugins" -> plugin.serverIntelligence().plugins();
                     case "get_player_details" -> plugin.playerManagement().inspectOnlinePlayer(requiredString(arguments, "player"));
                     case "list_server_files" -> plugin.fileIntelligence().list(optionalString(arguments, "path", "."));
@@ -92,6 +106,36 @@ public final class ServerToolExecutor {
             }
         });
         return result;
+    }
+
+    private JsonObject setWorldTimeTool() {
+        JsonObject properties = new JsonObject();
+        JsonObject world = new JsonObject();
+        world.addProperty("type", "string");
+        world.addProperty("description", "Exact name of a currently loaded world.");
+        properties.add("world", world);
+        JsonObject time = new JsonObject();
+        time.addProperty("type", "integer");
+        time.addProperty("minimum", 0);
+        time.addProperty("maximum", 23999);
+        time.addProperty("description", "Minecraft world time in ticks: 0 sunrise, 6000 noon, 12000 sunset, 18000 midnight.");
+        properties.add("time", time);
+        JsonArray required = new JsonArray();
+        required.add("world");
+        required.add("time");
+        JsonObject parameters = new JsonObject();
+        parameters.addProperty("type", "object");
+        parameters.add("properties", properties);
+        parameters.add("required", required);
+        parameters.addProperty("additionalProperties", false);
+        JsonObject function = new JsonObject();
+        function.addProperty("name", "set_world_time");
+        function.addProperty("description", "Request a world time change. This always opens a confirmation dialog; the time is changed only after the operator clicks Confirm.");
+        function.add("parameters", parameters);
+        JsonObject wrapper = new JsonObject();
+        wrapper.addProperty("type", "function");
+        wrapper.add("function", function);
+        return wrapper;
     }
 
     private JsonObject kickPlayerTool() {
@@ -152,6 +196,18 @@ public final class ServerToolExecutor {
         wrapper.addProperty("type", "function");
         wrapper.add("function", function);
         return wrapper;
+    }
+
+    private long requiredLong(JsonObject arguments, String key) {
+        if (!arguments.has(key) || !arguments.get(key).isJsonPrimitive()
+                || !arguments.getAsJsonPrimitive(key).isNumber()) {
+            throw new IllegalArgumentException("Argument must be an integer: " + key);
+        }
+        try {
+            return arguments.get(key).getAsLong();
+        } catch (NumberFormatException exception) {
+            throw new IllegalArgumentException("Argument must be an integer: " + key);
+        }
     }
 
     private String requiredString(JsonObject arguments, String key) {

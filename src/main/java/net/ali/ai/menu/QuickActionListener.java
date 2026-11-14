@@ -30,6 +30,10 @@ public final class QuickActionListener implements Listener {
             plugin.playerManagement().handleClick(player, event.getIdentifier());
             return;
         }
+        if (event.getIdentifier().asString().startsWith("aliai:world_action/")) {
+            plugin.worldManagement().handleClick(player, event.getIdentifier());
+            return;
+        }
 
         if (event.getIdentifier().equals(MainMenuDialog.quickActionKey())) {
             MainMenuDialog.openQuickAction(plugin, player);
