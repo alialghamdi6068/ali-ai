@@ -65,6 +65,12 @@ API requests run asynchronously and do not block the Minecraft tick thread. Bukk
 
 All Ali AI commands and dialog actions require OP. Configured permission nodes are additional restrictions, not alternatives to OP.
 
+## Confirmation dialogs
+
+Player kicks and world-time changes require an explicit Paper Dialog confirmation. The dialog text and button labels/tooltips can be customized under `ui.player-confirmation` and `ui.world-confirmation` in `config.yml`. Closing a dialog without choosing an action expires the pending request after two minutes. Each pending request is bound to the initiating operator and re-checks OP and its feature permission when confirmed.
+
+World time uses Minecraft ticks from 0 through 23999: 0 is sunrise, 6000 noon, 12000 sunset and 18000 midnight. Time changes affect only a currently loaded world.
+
 ## Internet search
 
 Use `/ai search <query>` for a live web search. This implementation uses Groq's built-in `browser_search` tool. It requires Groq enabled, a Groq API key, and one of these supported model IDs: `openai/gpt-oss-20b`, `openai/gpt-oss-120b`, or `openai/gpt-oss-safeguard-20b`. Other providers are not silently presented as having searched the web. If this configuration is missing, Ali AI explains what is required.
