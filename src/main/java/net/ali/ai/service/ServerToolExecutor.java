@@ -10,7 +10,7 @@ import org.bukkit.entity.Player;
 
 import java.util.concurrent.CompletableFuture;
 
-/** Executes a small allowlist of read-only server tools on the Paper main thread. */
+/** Executes allowlisted server tools on the Paper main thread; mutations require explicit confirmation. */
 public final class ServerToolExecutor {
     private final AliAIPlugin plugin;
 

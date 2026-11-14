@@ -14,6 +14,7 @@ Ali AI is a Java Paper server-administration plugin for Minecraft servers.
 - Groq built-in web search on supported GPT-OSS models.
 - AI function calling through a guarded server-side tool allowlist.
 - Live server status, TPS/MSPT, JVM memory, online players, worlds and plugin inventory.
+- Online player inspection and confirmation-gated kicks for non-OP players.
 - Bounded server file listing, text preview, filename search and content search across a capped number of small text files.
 
 ## Security contract

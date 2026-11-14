@@ -226,6 +226,16 @@ public final class HttpAiRequestService implements AiRequestService {
         int maximum = Math.max(1, Math.min(8, plugin.getConfig().getInt("ai.tools.max-calls-per-round", 4)));
         if (calls.size() > maximum) return CompletableFuture.failedFuture(new IllegalStateException("AI tool-call limit reached."));
 
+        boolean containsKick = calls.asList().stream()
+                .map(JsonElement::getAsJsonObject)
+                .map(call -> call.getAsJsonObject("function"))
+                .anyMatch(function -> function != null && function.has("name")
+                        && function.get("name").getAsString().equals("kick_player"));
+        if (containsKick && calls.size() != 1) {
+            return CompletableFuture.failedFuture(new IllegalStateException(
+                    "A player kick must be requested alone so its confirmation cannot be mixed with other actions."));
+        }
+
         JsonArray messages = new JsonArray();
         JsonObject system = new JsonObject();
         system.addProperty("role", "system");

@@ -9,6 +9,7 @@
 - Explicit `/ai search <query>` using Groq Browser Search on supported GPT-OSS models.
 - Guarded read-only AI tools for live server status, performance, online players, loaded worlds and installed plugins.
 - Guarded file tools for directory listing, bounded text preview, filename search and bounded text-content search.
+- Online player inspection and confirmation-gated kick actions for non-OP players; each confirmation re-checks OP, feature permission and target eligibility.
 - File inspection is confined to the server root, rejects symbolic links and caps read/scan sizes.
 - In-memory task executor foundation; no task history is persisted.
 - Basic OP/plugin-count security snapshot with its limitations stated.
@@ -19,7 +20,7 @@
 - Multi-round agent planning and tool execution with bounded steps.
 - Natural-language execution of administrative changes with per-tool authorization and confirmation flows.
 - File creation, modification, deletion, moving, copying, archive handling and durable content indexing.
-- Player actions (kick/ban/whitelist/permissions/inventory) with confirmation flows.
+- Remaining player actions (ban/unban/whitelist/permissions/inventory) with confirmation flows.
 - World actions (load/unload/create/delete/time/weather/gamerules) with confirmation flows.
 - Plugin installation/update/removal with trusted-source and compatibility verification.
 - MSPT and plugin-level performance attribution.

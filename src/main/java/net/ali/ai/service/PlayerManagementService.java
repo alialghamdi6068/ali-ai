@@ -75,6 +75,13 @@ public final class PlayerManagementService {
             return CompletableFuture.completedFuture("{\"ok\":false,\"error\":\"Kick reason must be 160 characters or fewer.\"}");
         }
 
+        long operatorPending = pendingKicks.values().stream()
+                .filter(pending -> pending.operatorId().equals(operator.getUniqueId()))
+                .count();
+        if (pendingKicks.size() >= 20 || operatorPending >= 3) {
+            return CompletableFuture.completedFuture("{\\"ok\\":false,\\"error\\":\\"Too many pending player confirmations. Resolve an existing dialog first.\\"}");
+        }
+
         UUID id = UUID.randomUUID();
         CompletableFuture<String> result = new CompletableFuture<>();
         PendingKick pending = new PendingKick(operator.getUniqueId(), target.getUniqueId(),
