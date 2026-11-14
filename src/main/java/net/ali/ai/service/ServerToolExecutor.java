@@ -25,6 +25,8 @@ public final class ServerToolExecutor {
         tools.add(tool("list_online_players", "List online players with UUID, ping, world, game mode and OP status."));
         tools.add(tool("list_worlds", "List loaded worlds and their current environment, difficulty, time and weather."));
         tools.add(tool("list_plugins", "List installed plugins and their enabled state."));
+        tools.add(tool("get_player_details", "Inspect an online player by exact Minecraft username.", "player", true));
+        tools.add(kickPlayerTool());
         tools.add(tool("list_server_files", "List files and folders inside the server directory. Optional relative path; use '.' for the root.", "path", false));
         tools.add(tool("read_server_file", "Read a small text file inside the server directory. Symbolic links and paths outside the server are rejected.", "path", true));
         tools.add(tool("search_server_files", "Search file and folder names inside the server directory.", "query", true));
@@ -48,8 +50,21 @@ public final class ServerToolExecutor {
 
                 boolean fileTool = name.equals("list_server_files") || name.equals("read_server_file")
                         || name.equals("search_server_files") || name.equals("search_file_contents");
-                if (!OperatorGuard.allows(plugin, operator, fileTool ? "manage-files" : "view-status")) {
+                boolean playerTool = name.equals("get_player_details") || name.equals("kick_player");
+                String feature = fileTool ? "manage-files" : playerTool ? "manage-players" : "view-status";
+                if (!OperatorGuard.allows(plugin, operator, feature)) {
                     result.complete(error("The operator is not authorized for this tool."));
+                    return;
+                }
+
+                if (name.equals("kick_player")) {
+                    plugin.playerManagement().requestKick(operator,
+                                    requiredString(arguments, "player"),
+                                    optionalString(arguments, "reason", "Removed by a server administrator."))
+                            .whenComplete((message, failure) -> {
+                                if (failure != null) result.complete(error("Player action failed."));
+                                else result.complete(message);
+                            });
                     return;
                 }
 
@@ -59,6 +74,7 @@ public final class ServerToolExecutor {
                     case "list_online_players" -> plugin.serverIntelligence().onlinePlayers();
                     case "list_worlds" -> plugin.serverIntelligence().worlds();
                     case "list_plugins" -> plugin.serverIntelligence().plugins();
+                    case "get_player_details" -> plugin.playerManagement().inspectOnlinePlayer(requiredString(arguments, "player"));
                     case "list_server_files" -> plugin.fileIntelligence().list(optionalString(arguments, "path", "."));
                     case "read_server_file" -> plugin.fileIntelligence().read(requiredString(arguments, "path"));
                     case "search_server_files" -> plugin.fileIntelligence().search(requiredString(arguments, "query"));
@@ -76,6 +92,35 @@ public final class ServerToolExecutor {
             }
         });
         return result;
+    }
+
+    private JsonObject kickPlayerTool() {
+        JsonObject properties = new JsonObject();
+        JsonObject player = new JsonObject();
+        player.addProperty("type", "string");
+        player.addProperty("description", "Exact online Minecraft username.");
+        properties.add("player", player);
+        JsonObject reason = new JsonObject();
+        reason.addProperty("type", "string");
+        reason.addProperty("description", "Short kick reason shown to the player.");
+        properties.add("reason", reason);
+
+        JsonArray required = new JsonArray();
+        required.add("player");
+        JsonObject parameters = new JsonObject();
+        parameters.addProperty("type", "object");
+        parameters.add("properties", properties);
+        parameters.add("required", required);
+        parameters.addProperty("additionalProperties", false);
+
+        JsonObject function = new JsonObject();
+        function.addProperty("name", "kick_player");
+        function.addProperty("description", "Request a kick for a non-OP online player. This always opens a confirmation dialog for the operator; the kick is not performed until Confirm is clicked.");
+        function.add("parameters", parameters);
+        JsonObject wrapper = new JsonObject();
+        wrapper.addProperty("type", "function");
+        wrapper.add("function", function);
+        return wrapper;
     }
 
     private JsonObject tool(String name, String description) {

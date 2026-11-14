@@ -26,6 +26,16 @@ ui:
       tooltip: "Describe an administrative task in natural language."
       color: "#20C060"
       width: 300
+  player-confirmation:
+    title: "Confirm player action"
+    description: "Ali AI is requesting permission to kick %player%."
+    reason-label: "Reason: %reason%"
+    confirm:
+      label: "Confirm"
+      tooltip: "Confirm this kick"
+    cancel:
+      label: "Cancel"
+      tooltip: "Do not kick this player"
   quick-action:
     title: "Ali AI — Quick Action"
     description: "Describe what you want Ali AI to do. Arabic and English are supported."
