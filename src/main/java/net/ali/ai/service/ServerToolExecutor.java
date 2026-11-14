@@ -26,6 +26,7 @@ public final class ServerToolExecutor {
         tools.add(tool("list_worlds", "List loaded worlds and their current environment, difficulty, time and weather."));
         tools.add(tool("get_world_details", "Inspect one loaded world by exact world name.", "world", true));
         tools.add(setWorldTimeTool());
+        tools.add(setWorldWeatherTool());
         tools.add(tool("list_plugins", "List installed plugins and their enabled state."));
         tools.add(tool("get_player_details", "Inspect an online player by exact Minecraft username.", "player", true));
         tools.add(kickPlayerTool());
@@ -53,7 +54,7 @@ public final class ServerToolExecutor {
                 boolean fileTool = name.equals("list_server_files") || name.equals("read_server_file")
                         || name.equals("search_server_files") || name.equals("search_file_contents");
                 boolean playerTool = name.equals("get_player_details") || name.equals("kick_player");
-                boolean worldTool = name.equals("get_world_details") || name.equals("set_world_time");
+                boolean worldTool = name.equals("get_world_details") || name.equals("set_world_time") || name.equals("set_world_weather");
                 String feature = fileTool ? "manage-files" : playerTool ? "manage-players"
                         : worldTool ? "manage-worlds" : "view-status";
                 if (!OperatorGuard.allows(plugin, operator, feature)) {
@@ -76,6 +77,15 @@ public final class ServerToolExecutor {
                                     requiredString(arguments, "world"), requiredLong(arguments, "time"))
                             .whenComplete((message, failure) -> {
                                 if (failure != null) result.complete(error("World time change failed."));
+                                else result.complete(message);
+                            });
+                    return;
+                }
+                if (name.equals("set_world_weather")) {
+                    plugin.worldManagement().requestWeatherChange(operator,
+                                    requiredString(arguments, "world"), requiredString(arguments, "weather"))
+                            .whenComplete((message, failure) -> {
+                                if (failure != null) result.complete(error("World weather change failed."));
                                 else result.complete(message);
                             });
                     return;
@@ -106,6 +116,41 @@ public final class ServerToolExecutor {
             }
         });
         return result;
+    }
+
+    private JsonObject setWorldWeatherTool() {
+        JsonObject properties = new JsonObject();
+        JsonObject world = new JsonObject();
+        world.addProperty("type", "string");
+        world.addProperty("description", "Exact name of a currently loaded world.");
+        properties.add("world", world);
+        JsonObject weather = new JsonObject();
+        weather.addProperty("type", "string");
+        JsonArray allowed = new JsonArray();
+        allowed.add("clear");
+        allowed.add("rain");
+        allowed.add("thunder");
+        weather.add("enum", allowed);
+        weather.addProperty("description", "Weather state: clear, rain or thunder.");
+        properties.add("weather", weather);
+
+        JsonArray required = new JsonArray();
+        required.add("world");
+        required.add("weather");
+        JsonObject parameters = new JsonObject();
+        parameters.addProperty("type", "object");
+        parameters.add("properties", properties);
+        parameters.add("required", required);
+        parameters.addProperty("additionalProperties", false);
+
+        JsonObject function = new JsonObject();
+        function.addProperty("name", "set_world_weather");
+        function.addProperty("description", "Request a weather change in a loaded world. This always opens a confirmation dialog; the weather changes only after the operator clicks Confirm.");
+        function.add("parameters", parameters);
+        JsonObject wrapper = new JsonObject();
+        wrapper.addProperty("type", "function");
+        wrapper.add("function", function);
+        return wrapper;
     }
 
     private JsonObject setWorldTimeTool() {

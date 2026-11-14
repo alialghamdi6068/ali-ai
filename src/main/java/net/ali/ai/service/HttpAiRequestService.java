@@ -231,7 +231,8 @@ public final class HttpAiRequestService implements AiRequestService {
                 .map(call -> call.getAsJsonObject("function"))
                 .anyMatch(function -> function != null && function.has("name")
                         && (function.get("name").getAsString().equals("kick_player")
-                        || function.get("name").getAsString().equals("set_world_time")));
+                        || function.get("name").getAsString().equals("set_world_time")
+                        || function.get("name").getAsString().equals("set_world_weather")));
         if (containsConfirmationAction && calls.size() != 1) {
             return CompletableFuture.failedFuture(new IllegalStateException(
                     "A confirmation-required action must be requested alone so its dialog cannot be mixed with other actions."));

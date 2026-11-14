@@ -40,6 +40,8 @@ ui:
     title: "Confirm world change"
     description: "Set the time in %world% to %time% ticks?"
     hint: "0 = sunrise, 6000 = noon, 12000 = sunset, 18000 = midnight."
+    weather-description: "Set the weather in %world% to %weather%?"
+    weather-hint: "This changes the weather for approximately 10 minutes."
     confirm:
       label: "Confirm"
       tooltip: "Apply this world time"
