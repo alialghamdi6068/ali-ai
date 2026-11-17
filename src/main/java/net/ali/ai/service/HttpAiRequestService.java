@@ -92,6 +92,8 @@ public final class HttpAiRequestService implements AiRequestService {
         }
 
         UUID operatorId = operator.getUniqueId();
+        JsonArray conversationMessages = createConversationMessages(operatorId, request);
+        RequestSettings requestSettings = createRequestSettings();
         if (!activeRequests.add(operatorId)) {
             send(operator, "messages.request-already-running",
                     "<yellow>You already have an Ali AI request in progress. Please wait for it to finish.</yellow>");
@@ -102,7 +104,7 @@ public final class HttpAiRequestService implements AiRequestService {
                 plugin.getConfig().getString("messages.request-started",
                         "<gray>Ali AI is processing your request...</gray>")));
 
-        tryProviders(operator, request, attempts, 0, webSearch)
+        tryProviders(operator, attempts, 0, webSearch, conversationMessages, requestSettings)
                 .whenComplete((answer, error) -> runOnMainThread(() -> {
                     activeRequests.remove(operatorId);
                     if (!operator.isOnline() || !plugin.isEnabled()) {
@@ -158,17 +160,17 @@ public final class HttpAiRequestService implements AiRequestService {
         return attempts;
     }
 
-    private CompletableFuture<String> tryProviders(Player operator, String prompt,
-                                                       List<Attempt> attempts, int index, boolean webSearch) {
+    private CompletableFuture<String> tryProviders(Player operator, List<Attempt> attempts,
+                                                       int index, boolean webSearch, JsonArray messages,
+                                                       RequestSettings settings) {
         if (index >= attempts.size()) {
             return CompletableFuture.failedFuture(new IllegalStateException("No provider accepted the request."));
         }
 
         Attempt attempt = attempts.get(index);
-        JsonArray messages = createConversationMessages(operator.getUniqueId(), prompt);
         AtomicBoolean toolExecutionStarted = new AtomicBoolean();
 
-        return sendRound(operator, attempt, messages, webSearch, 0, 0, toolExecutionStarted)
+        return sendRound(operator, attempt, messages, settings, webSearch, 0, 0, toolExecutionStarted)
                 .handle((answer, error) -> {
                     if (error == null && answer != null && !answer.isBlank()) {
                         return CompletableFuture.completedFuture(answer);
@@ -179,9 +181,20 @@ public final class HttpAiRequestService implements AiRequestService {
                     if (toolExecutionStarted.get()) {
                         return CompletableFuture.<String>failedFuture(unwrap(error));
                     }
-                    return tryProviders(operator, prompt, attempts, index + 1, webSearch);
+                    return tryProviders(operator, attempts, index + 1, webSearch, messages, settings);
                 })
                 .thenCompose(future -> future);
+    }
+
+    private RequestSettings createRequestSettings() {
+        boolean toolsEnabled = plugin.getConfig().getBoolean("ai.tools.enabled", true);
+        int timeoutSeconds = clamp(plugin.getConfig().getInt("ai.request-timeout-seconds", 45), 5, 120);
+        int maximumPerRound = clamp(plugin.getConfig().getInt("ai.tools.max-calls-per-round", 4), 1, 8);
+        int maximumRounds = clamp(plugin.getConfig().getInt("ai.tools.max-rounds", 4), 1, 8);
+        int maximumTotalCalls = clamp(plugin.getConfig().getInt("ai.tools.max-total-calls", 12), 1, 32);
+        JsonArray definitions = toolsEnabled ? toolExecutor.definitions() : new JsonArray();
+        return new RequestSettings(toolsEnabled, timeoutSeconds, maximumPerRound,
+                maximumRounds, maximumTotalCalls, definitions);
     }
 
     private JsonArray createConversationMessages(UUID operatorId, String prompt) {
@@ -201,15 +214,12 @@ public final class HttpAiRequestService implements AiRequestService {
     }
 
     private CompletableFuture<String> sendRound(Player operator, Attempt attempt, JsonArray messages,
-                                                 boolean webSearch, int toolRound, int totalToolCalls,
+                                                 RequestSettings settings, boolean webSearch,
+                                                 int toolRound, int totalToolCalls,
                                                  AtomicBoolean toolExecutionStarted) {
-        if (!plugin.isEnabled() || !operator.isOnline()) {
-            return CompletableFuture.failedFuture(new IllegalStateException("Operator is no longer available."));
-        }
-
         HttpRequest request;
         try {
-            request = createRequest(attempt, messages, webSearch);
+            request = createRequest(attempt, messages, settings, webSearch);
         } catch (RuntimeException exception) {
             return CompletableFuture.failedFuture(exception);
         }
@@ -223,12 +233,12 @@ public final class HttpAiRequestService implements AiRequestService {
                     if (webSearch) {
                         return CompletableFuture.completedFuture(extractAnswer(response.body()));
                     }
-                    return handleToolCalls(operator, attempt, messages, response.body(),
+                    return handleToolCalls(operator, attempt, messages, settings, response.body(),
                             toolRound, totalToolCalls, toolExecutionStarted);
                 });
     }
 
-    private HttpRequest createRequest(Attempt attempt, JsonArray messages, boolean webSearch) {
+    private HttpRequest createRequest(Attempt attempt, JsonArray messages, RequestSettings settings, boolean webSearch) {
         JsonObject body = new JsonObject();
         body.addProperty("model", attempt.model());
         body.add("messages", messages.deepCopy());
@@ -240,13 +250,12 @@ public final class HttpAiRequestService implements AiRequestService {
             tools.add(browserSearch);
             body.add("tools", tools);
             body.addProperty("tool_choice", "required");
-        } else if (plugin.getConfig().getBoolean("ai.tools.enabled", true)) {
-            body.add("tools", toolExecutor.definitions());
+        } else if (settings.toolsEnabled()) {
+            body.add("tools", settings.toolDefinitions().deepCopy());
             body.addProperty("tool_choice", "auto");
         }
 
-        int timeoutSeconds = Math.max(5, Math.min(120,
-                plugin.getConfig().getInt("ai.request-timeout-seconds", 45)));
+        int timeoutSeconds = settings.timeoutSeconds();
 
         return HttpRequest.newBuilder(URI.create(attempt.endpoint()))
                 .timeout(Duration.ofSeconds(timeoutSeconds))
@@ -258,7 +267,8 @@ public final class HttpAiRequestService implements AiRequestService {
     }
 
     private CompletableFuture<String> handleToolCalls(Player operator, Attempt attempt, JsonArray messages,
-                                                        String responseBody, int toolRound, int totalToolCalls,
+                                                        RequestSettings settings, String responseBody,
+                                                        int toolRound, int totalToolCalls,
                                                         AtomicBoolean toolExecutionStarted) {
         JsonObject root = JsonParser.parseString(responseBody).getAsJsonObject();
         JsonArray choices = root.getAsJsonArray("choices");
@@ -272,14 +282,14 @@ public final class HttpAiRequestService implements AiRequestService {
                 || message.getAsJsonArray("tool_calls").isEmpty()) {
             return CompletableFuture.completedFuture(extractAnswer(responseBody));
         }
-        if (!plugin.getConfig().getBoolean("ai.tools.enabled", true)) {
+        if (!settings.toolsEnabled()) {
             return CompletableFuture.failedFuture(new IllegalStateException("AI tools are disabled."));
         }
 
         JsonArray calls = message.getAsJsonArray("tool_calls");
-        int maximumPerRound = clamp(plugin.getConfig().getInt("ai.tools.max-calls-per-round", 4), 1, 8);
-        int maximumRounds = clamp(plugin.getConfig().getInt("ai.tools.max-rounds", 4), 1, 8);
-        int maximumTotalCalls = clamp(plugin.getConfig().getInt("ai.tools.max-total-calls", 12), 1, 32);
+        int maximumPerRound = settings.maximumCallsPerRound();
+        int maximumRounds = settings.maximumRounds();
+        int maximumTotalCalls = settings.maximumTotalCalls();
         if (toolRound >= maximumRounds) {
             return CompletableFuture.failedFuture(new IllegalStateException("AI tool round limit reached."));
         }
@@ -350,7 +360,7 @@ public final class HttpAiRequestService implements AiRequestService {
                         tool.addProperty("content", results.get(i).join());
                         nextMessages.add(tool);
                     }
-                    return sendRound(operator, attempt, nextMessages, false, toolRound + 1,
+                    return sendRound(operator, attempt, nextMessages, settings, false, toolRound + 1,
                             totalToolCalls + invocations.size(), toolExecutionStarted);
                 });
     }
@@ -371,6 +381,9 @@ public final class HttpAiRequestService implements AiRequestService {
     }
 
     private record ToolInvocation(String id, String name, JsonObject arguments) { }
+
+    private record RequestSettings(boolean toolsEnabled, int timeoutSeconds, int maximumCallsPerRound,
+                                   int maximumRounds, int maximumTotalCalls, JsonArray toolDefinitions) { }
 
     private String extractAnswer(String responseBody) {
         JsonObject root = JsonParser.parseString(responseBody).getAsJsonObject();
