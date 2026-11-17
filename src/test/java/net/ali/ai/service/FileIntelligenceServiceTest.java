@@ -22,10 +22,12 @@ class FileIntelligenceServiceTest {
     }
 
     @Test
-    void boundsFilePreviewWithoutReadingTheWholeFile() throws IOException {
-        Files.write(serverRoot.resolve("large.txt"), new byte[16 * 1024 + 1]);
+    void readsLargeFilesInBoundedChunks() throws IOException {
+        Files.writeString(serverRoot.resolve("large.txt"), "x".repeat(16 * 1024 + 1));
         FileIntelligenceService service = new FileIntelligenceService(serverRoot);
-        assertThrows(IOException.class, () -> service.read("large.txt"));
+
+        assertEquals("x".repeat(16 * 1024), service.read("large.txt"));
+        assertEquals("x", service.readRange("large.txt", 16 * 1024L, 1));
     }
 
     @Test

@@ -8,15 +8,15 @@
 - Direct asynchronous REST chat requests for Gemini, OpenAI and Groq.
 - Configurable models, provider enablement, preferred provider, key rotation and provider fallback.
 - Explicit `/ai search <query>` using Groq Browser Search on supported GPT-OSS models.
-- Guarded read-only AI tools for live server status, performance, online players, loaded worlds and installed plugins.
-- Guarded file tools for directory listing, bounded text preview, filename search and bounded text-content search.
+- Guarded AI tools for live server status, performance, online players, loaded worlds and installed plugins, plus confirmation-gated player kicks and world time/weather changes.
+- Guarded file tools for directory listing, chunked text reads, filename search and bounded text-content search; file I/O runs on the bounded background worker pool.
 - Online player inspection and confirmation-gated kick actions for non-OP players; each confirmation re-checks OP, feature permission and target eligibility.
 - Loaded-world inspection and confirmation-gated world-time and weather changes; confirmations re-check OP, feature permission and world availability.
-- File inspection is confined to the server root, rejects symbolic links and caps read/scan sizes.
+- File inspection is confined to the server root, rejects symbolic links and caps per-request read/scan sizes.
 - In-memory task executor foundation; no task history is persisted.
 - Bounded in-memory conversation context isolated per OP, with configurable message/character limits and no disk persistence.
 - Basic OP/plugin-count security snapshot with its limitations stated.
-- Regression tests for file path confinement, preview size limits, text search and symbolic-link rejection.
+- Regression tests for file path confinement, bounded chunk reads, text search and symbolic-link rejection.
 
 ## Still to implement
 - Natural-language execution of administrative changes with per-tool authorization and confirmation flows.

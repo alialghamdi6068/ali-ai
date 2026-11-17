@@ -58,12 +58,12 @@ When `ai.tools.enabled` is true, the model may request:
 - Read server status and performance metrics.
 - List online players, loaded worlds and installed plugins.
 - Inspect online players and loaded worlds.
-- List server files, read small text files, search filenames and search text in a bounded number of small files.
+- List server files, read text files in bounded byte ranges (up to 64 KiB per call), search filenames and search text in a bounded number of small files. File reads and content searches run on the bounded background worker pool.
 - Request a kick for a non-OP player or a world time/weather change; these actions require a separate Paper Dialog confirmation.
 
 Each tool execution re-checks OP and its configured feature permission. File tools remain confined to the server directory. File and log contents are returned as untrusted data and must never be treated as instructions. The model cannot execute arbitrary console commands.
 
-`max-calls-per-round` limits calls in one response (1–8; default 4), `max-rounds` limits sequential tool rounds (1–8; default 4), and `max-total-calls` limits all calls in one request (1–32; default 12). File-content search is bounded and is not a full-text index.
+`max-calls-per-round` limits calls in one response (1–8; default 4), `max-rounds` limits sequential tool rounds (1–8; default 4), and `max-total-calls` limits all calls in one request (1–32; default 12). The `read_server_file` tool accepts an optional byte `offset` and `limit` (1–65536) so large text files can be inspected incrementally. File-content search is bounded and is not a full-text index.
 
 ## Security and threading
 
