@@ -102,9 +102,8 @@ public final class HttpAiRequestService implements AiRequestService {
                         "<gray>Ali AI is processing your request...</gray>")));
 
         tryProviders(operator, request, attempts, 0, webSearch)
-                .whenComplete((answer, error) -> {
+                .whenComplete((answer, error) -> runOnMainThread(() -> {
                     activeRequests.remove(operatorId);
-                    runOnMainThread(() -> {
                     if (!operator.isOnline() || !plugin.isEnabled()) {
                         return;
                     }
@@ -120,8 +119,7 @@ public final class HttpAiRequestService implements AiRequestService {
                     operator.sendMessage(MiniMessage.miniMessage().deserialize(
                             plugin.getConfig().getString("messages.response-prefix", "<dark_aqua>[Ali AI]</dark_aqua> ")
                     ).append(MiniMessage.miniMessage().deserialize(escapeMiniMessage(answer))));
-                    });
-                });
+                }));
     }
 
     private List<Attempt> buildAttempts(boolean webSearch) {
