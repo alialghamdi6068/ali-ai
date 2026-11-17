@@ -42,7 +42,7 @@ ai:
     max-calls-per-round: 4
 ```
 
-The plugin calls provider HTTPS REST endpoints directly using Java HttpClient. It does not use provider SDKs or run local models. Gemini uses Google's OpenAI-compatible Chat Completions endpoint; OpenAI and Groq use their Chat Completions endpoints. Tool calling is an OpenAI-compatible capability, but provider/model support can differ. If a provider rejects a tool-enabled request, Ali AI falls back to the next configured provider/key.
+The plugin calls provider HTTPS REST endpoints directly using Java HttpClient. It does not use provider SDKs or run local models. Gemini uses Google's OpenAI-compatible Chat Completions endpoint; OpenAI and Groq use their Chat Completions endpoints. Tool calling is an OpenAI-compatible capability, but provider/model support can differ. Ali AI supports bounded multi-round tool calls. If a provider rejects a request before any tool has executed, it falls back to the next configured provider/key. Once a tool execution has started, a later provider failure ends the request instead of retrying elsewhere, preventing accidental repetition of an operation.
 
 The configured default provider is tried first. Other enabled providers are used as fallbacks. Keys are rotated between attempts. An HTTP error, network failure, malformed response or empty response advances to the next configured key/provider. A successful key is not proof of long-term provider health.
 
@@ -50,14 +50,16 @@ Ali AI remains enabled when no API keys are configured. AI requests then return 
 
 ## Available AI tools
 
-When `ai.tools.enabled` is true, the model may request these read-only operations:
+When `ai.tools.enabled` is true, the model may request:
 - Read server status and performance metrics.
 - List online players, loaded worlds and installed plugins.
+- Inspect online players and loaded worlds.
 - List server files, read small text files, search filenames and search text in a bounded number of small files.
+- Request a kick for a non-OP player or a world time/weather change; these actions require a separate Paper Dialog confirmation.
 
-Each tool execution re-checks OP and its configured feature permission. File tools remain confined to the server directory. File and log contents are returned as untrusted data and must never be treated as instructions. The current implementation does not allow the model to execute arbitrary console commands or make destructive changes.
+Each tool execution re-checks OP and its configured feature permission. File tools remain confined to the server directory. File and log contents are returned as untrusted data and must never be treated as instructions. The model cannot execute arbitrary console commands.
 
-`max-calls-per-round` limits how many function calls can be accepted from one provider response (1–8; default 4). File-content search is bounded and is not a full-text index.
+`max-calls-per-round` limits calls in one response (1–8; default 4), `max-rounds` limits sequential tool rounds (1–8; default 4), and `max-total-calls` limits all calls in one request (1–32; default 12). File-content search is bounded and is not a full-text index.
 
 ## Security and threading
 

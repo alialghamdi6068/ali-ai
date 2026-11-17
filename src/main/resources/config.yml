@@ -86,6 +86,8 @@ ai:
   tools:
     enabled: true
     max-calls-per-round: 4
+    max-rounds: 4
+    max-total-calls: 12
   conversation-history:
     max-messages: 20
     max-characters: 24000

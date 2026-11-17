@@ -18,7 +18,6 @@
 - Regression tests for file path confinement, preview size limits, text search and symbolic-link rejection.
 
 ## Still to implement
-- Multi-round agent planning and tool execution with bounded steps.
 - Natural-language execution of administrative changes with per-tool authorization and confirmation flows.
 - File creation, modification, deletion, moving, copying, archive handling and durable content indexing.
 - Remaining player actions (ban/unban/whitelist/permissions/inventory) with confirmation flows.
