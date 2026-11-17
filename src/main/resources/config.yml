@@ -86,6 +86,9 @@ ai:
   tools:
     enabled: true
     max-calls-per-round: 4
+  conversation-history:
+    max-messages: 20
+    max-characters: 24000
   providers:
     gemini:
       enabled: false
@@ -128,6 +131,7 @@ messages:
   web-search-unavailable: "<yellow>Web search requires Groq enabled with a supported GPT-OSS model and a Groq API key.</yellow>"
   all-providers-failed: "<red>All configured AI providers failed or returned an empty response. Check provider settings and server console.</red>"
   request-started: "<gray>Ali AI is processing your request...</gray>"
+  request-already-running: "<yellow>You already have an Ali AI request in progress. Please wait for it to finish.</yellow>"
   empty-request: "<red>Please enter a request before pressing Send.</red>"
   request-too-long: "<red>Your request is too long. Maximum: %maximum% characters.</red>"
   dialog-unavailable: "<red>The request could not be read. Please try again.</red>"

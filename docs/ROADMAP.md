@@ -13,11 +13,11 @@
 - Loaded-world inspection and confirmation-gated world-time and weather changes; confirmations re-check OP, feature permission and world availability.
 - File inspection is confined to the server root, rejects symbolic links and caps read/scan sizes.
 - In-memory task executor foundation; no task history is persisted.
+- Bounded in-memory conversation context isolated per OP, with configurable message/character limits and no disk persistence.
 - Basic OP/plugin-count security snapshot with its limitations stated.
 - Regression tests for file path confinement, preview size limits, text search and symbolic-link rejection.
 
 ## Still to implement
-- Reliable conversation history and per-operator context.
 - Multi-round agent planning and tool execution with bounded steps.
 - Natural-language execution of administrative changes with per-tool authorization and confirmation flows.
 - File creation, modification, deletion, moving, copying, archive handling and durable content indexing.
