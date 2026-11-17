@@ -46,6 +46,7 @@ public final class AdminSectionDialog {
         if (content.length() > 12000) {
             content = content.substring(0, 11997) + "...";
         }
+        String dialogContent = content;
 
         var config = plugin.getConfig();
         ActionButton back = ActionButton.create(
@@ -60,7 +61,7 @@ public final class AdminSectionDialog {
                         .canCloseWithEscape(true)
                         .body(List.of(
                                 DialogBody.plainMessage(Component.text(description)),
-                                DialogBody.plainMessage(Component.text(content))))
+                                DialogBody.plainMessage(Component.text(dialogContent))))
                         .build())
                 .type(DialogType.notice(back)));
 
