@@ -21,6 +21,7 @@ public final class FileIntelligenceService {
     private static final int MAX_RESULTS = 80;
     private static final int MAX_SEARCH_ENTRIES = 5_000;
     private static final int MAX_READ_BYTES = 16 * 1024;
+    private static final int MAX_RANGE_READ_BYTES = 64 * 1024;
     private static final int MAX_CONTENT_SEARCH_FILES = 500;
     private static final int MAX_CONTENT_SEARCH_FILE_BYTES = 256 * 1024;
     private static final int MAX_CONTENT_MATCHES = 50;
@@ -61,18 +62,34 @@ public final class FileIntelligenceService {
     }
 
     public String read(String relativePath) throws IOException {
+        return readRange(relativePath, 0, MAX_READ_BYTES);
+    }
+
+    /**
+     * Reads a bounded byte range from a text file without loading the whole file into memory.
+     * Use the returned byte offset to continue reading large files in subsequent requests.
+     */
+    public String readRange(String relativePath, long offset, int maximumBytes) throws IOException {
+        if (offset < 0) {
+            throw new IOException("File offset cannot be negative.");
+        }
+        if (maximumBytes < 1 || maximumBytes > MAX_RANGE_READ_BYTES) {
+            throw new IOException("Range size must be between 1 byte and 64 KiB.");
+        }
+
         Path file = resolve(relativePath);
         if (!Files.isRegularFile(file, LinkOption.NOFOLLOW_LINKS)) {
             throw new IOException("The requested path is not a regular file.");
         }
+        long fileSize = Files.size(file);
+        if (offset > fileSize) {
+            throw new IOException("File offset is beyond the end of the file.");
+        }
 
-        // Read at most the preview limit plus one byte; do not trust a prior size check.
         byte[] bytes;
         try (InputStream input = Files.newInputStream(file, LinkOption.NOFOLLOW_LINKS)) {
-            bytes = input.readNBytes(MAX_READ_BYTES + 1);
-        }
-        if (bytes.length > MAX_READ_BYTES) {
-            throw new IOException("File is larger than the safe preview limit (16 KiB).");
+            input.skipNBytes(offset);
+            bytes = input.readNBytes(maximumBytes);
         }
         rejectBinary(bytes);
         return new String(bytes, StandardCharsets.UTF_8);

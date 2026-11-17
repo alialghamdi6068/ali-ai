@@ -4,10 +4,14 @@ import net.ali.ai.AliAIPlugin;
 
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.FutureTask;
+import java.util.concurrent.RejectedExecutionException;
 
 /** Tracks only currently running background jobs; no task history is persisted. */
 public final class TaskManager {
@@ -26,15 +30,48 @@ public final class TaskManager {
 
     public UUID submit(Runnable task) {
         UUID id = UUID.randomUUID();
-        Future<?> future = executor.submit(() -> {
+        FutureTask<Void> future = new FutureTask<>(() -> {
             try {
                 task.run();
             } finally {
                 running.remove(id);
             }
+            return null;
         });
         running.put(id, future);
+        try {
+            executor.execute(future);
+        } catch (RejectedExecutionException exception) {
+            running.remove(id);
+            throw exception;
+        }
         return id;
+    }
+
+    public <T> CompletableFuture<T> submit(Callable<T> task) {
+        UUID id = UUID.randomUUID();
+        CompletableFuture<T> result = new CompletableFuture<>();
+        FutureTask<Void> future = new FutureTask<>(() -> {
+            try {
+                result.complete(task.call());
+            } catch (Throwable failure) {
+                result.completeExceptionally(failure);
+                if (failure instanceof Error error) {
+                    throw error;
+                }
+            } finally {
+                running.remove(id);
+            }
+            return null;
+        });
+        running.put(id, future);
+        try {
+            executor.execute(future);
+        } catch (RejectedExecutionException exception) {
+            running.remove(id);
+            result.completeExceptionally(exception);
+        }
+        return result;
     }
 
     public boolean cancel(UUID id) {

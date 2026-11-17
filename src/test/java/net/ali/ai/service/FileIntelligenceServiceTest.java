@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -25,6 +26,24 @@ class FileIntelligenceServiceTest {
         Files.write(serverRoot.resolve("large.txt"), new byte[16 * 1024 + 1]);
         FileIntelligenceService service = new FileIntelligenceService(serverRoot);
         assertThrows(IOException.class, () -> service.read("large.txt"));
+    }
+
+    @Test
+    void readsOnlyTheRequestedByteRange() throws IOException {
+        Files.writeString(serverRoot.resolve("range.txt"), "0123456789");
+        FileIntelligenceService service = new FileIntelligenceService(serverRoot);
+
+        assertEquals("3456", service.readRange("range.txt", 3, 4));
+    }
+
+    @Test
+    void rejectsInvalidRangeOffsetsAndLimits() throws IOException {
+        Files.writeString(serverRoot.resolve("range.txt"), "0123456789");
+        FileIntelligenceService service = new FileIntelligenceService(serverRoot);
+
+        assertThrows(IOException.class, () -> service.readRange("range.txt", -1, 4));
+        assertThrows(IOException.class, () -> service.readRange("range.txt", 11, 4));
+        assertThrows(IOException.class, () -> service.readRange("range.txt", 0, 65 * 1024));
     }
 
     @Test
