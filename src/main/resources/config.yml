@@ -20,12 +20,89 @@ ui:
   main-menu:
     title: "Ali AI | Server Administrator"
     description: "Your Minecraft server administration assistant."
-    columns: 1
+    columns: 2
     quick-action:
       label: "Quick Action"
       tooltip: "Describe an administrative task in natural language."
       color: "#20C060"
       width: 300
+    sections:
+      ai-assistant:
+        label: "AI Assistant"
+        tooltip: "Chat with Ali AI and request server tasks."
+        color: "#20C060"
+      server-intelligence:
+        label: "Server Intelligence"
+        tooltip: "Inspect live server information."
+        color: "#38BDF8"
+      file-intelligence:
+        label: "File Intelligence"
+        tooltip: "Browse and inspect server files."
+        color: "#60A5FA"
+      plugin-intelligence:
+        label: "Plugin Intelligence"
+        tooltip: "Inspect installed plugins."
+        color: "#A78BFA"
+      player-management:
+        label: "Player Management"
+        tooltip: "Inspect online players."
+        color: "#F59E0B"
+      world-management:
+        label: "World Management"
+        tooltip: "Inspect loaded worlds."
+        color: "#34D399"
+      performance-analyzer:
+        label: "Performance Analyzer"
+        tooltip: "Inspect TPS, MSPT and JVM memory."
+        color: "#F97316"
+      security-center:
+        label: "Security Center"
+        tooltip: "View the available security snapshot."
+        color: "#EF4444"
+      task-manager:
+        label: "Task Manager"
+        tooltip: "View currently running Ali AI tasks."
+        color: "#94A3B8"
+      settings:
+        label: "Settings"
+        tooltip: "Inspect current provider and AI settings."
+        color: "#EAB308"
+  sections:
+    back:
+      label: "Back"
+      tooltip: "Return to the Ali AI main menu"
+      color: "#38BDF8"
+      width: 120
+    ai-assistant:
+      title: "AI Assistant"
+      description: "Send an administrative request in Arabic or English."
+    server-intelligence:
+      title: "Server Intelligence"
+      description: "Live server facts collected from Paper."
+    file-intelligence:
+      title: "File Intelligence"
+      description: "Top-level server files and folders. File access is confined to the server directory."
+    plugin-intelligence:
+      title: "Plugin Intelligence"
+      description: "Installed plugins and their current enabled state."
+    player-management:
+      title: "Player Management"
+      description: "Online player information. Player actions require their own confirmation."
+    world-management:
+      title: "World Management"
+      description: "Currently loaded worlds. World changes require their own confirmation."
+    performance-analyzer:
+      title: "Performance Analyzer"
+      description: "Current TPS, average tick time and JVM heap metrics."
+    security-center:
+      title: "Security Center"
+      description: "A limited security snapshot, not a complete vulnerability audit."
+    task-manager:
+      title: "Task Manager"
+      description: "Only currently running tasks are shown; no task history is stored."
+    settings:
+      title: "Settings"
+      description: "Provider and model configuration. Secret API keys are never displayed."
   player-confirmation:
     title: "Confirm player action"
     description: "Ali AI is requesting permission to kick %player%."

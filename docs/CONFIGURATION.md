@@ -48,6 +48,10 @@ The configured default provider is tried first. Other enabled providers are used
 
 Ali AI remains enabled when no API keys are configured. AI requests then return a clear no-key message. Credentials are server-wide in this version; per-operator credential profiles are not implemented.
 
+## Dialog navigation
+
+The main Paper Dialog menu contains ten configurable sections under `ui.main-menu.sections`. Section page titles and descriptions are under `ui.sections`; the Back button is configurable there as well. The current pages display implemented live server information. Management actions that are not yet implemented are not represented as active controls.
+
 ## Available AI tools
 
 When `ai.tools.enabled` is true, the model may request:

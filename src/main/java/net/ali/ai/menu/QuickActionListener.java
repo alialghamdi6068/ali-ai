@@ -35,6 +35,17 @@ public final class QuickActionListener implements Listener {
             return;
         }
 
+        if (event.getIdentifier().equals(AdminSectionDialog.backKey())) {
+            MainMenuDialog.open(plugin, player);
+            return;
+        }
+
+        String identifier = event.getIdentifier().asString();
+        if (MainMenuDialog.isSectionKey(identifier)) {
+            AdminSectionDialog.open(plugin, player, MainMenuDialog.sectionId(identifier));
+            return;
+        }
+
         if (event.getIdentifier().equals(MainMenuDialog.quickActionKey())) {
             MainMenuDialog.openQuickAction(plugin, player);
             return;

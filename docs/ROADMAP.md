@@ -1,7 +1,8 @@
 # Development roadmap
 
 ## Implemented foundation
-- Native Paper Dialog main menu and Quick Action dialog.
+- Native Paper Dialog main menu with all ten administration sections, configurable button labels/colors/tooltips, section pages and navigation back to the main menu.
+- Quick Action dialog with configurable inputs and Send/Cancel actions.
 - Mandatory OP authorization at command, dialog and AI tool execution boundaries.
 - Server-local provider credential file with bounded key slots.
 - Direct asynchronous REST chat requests for Gemini, OpenAI and Groq.
@@ -25,7 +26,7 @@
 - Plugin installation/update/removal with trusted-source and compatibility verification.
 - MSPT and plugin-level performance attribution.
 - Deep security checks for plugin permissions, configuration risks and suspicious files.
-- Complete configurable Dialog navigation for all ten administration sections.
+- Complete interactive management workflows inside each administration section; current section pages expose the implemented live information and route AI Assistant to Quick Action.
 - Provider-specific capability discovery, usage reporting and structured source-link extraction.
 - Paper integration tests and mocked-provider contract tests.
 
